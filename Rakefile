@@ -2,6 +2,22 @@ require 'rake'
 require 'rake/testtask'
 require 'rake/rdoctask'
 
+begin
+  require 'jeweler'
+  Jeweler::Tasks.new do |gemspec|
+    gemspec.name = "mongoid_taggable"
+    gemspec.version = "0.1.0"
+    gemspec.summary = "Mongoid taggable behaviour"
+    gemspec.description = "Mongoid Taggable provides some helpers to create taggable documents."
+    gemspec.email = "wilkerlucio@gmail.com"
+    gemspec.homepage = "http://github.com/kriss/mongo_taggable"
+    gemspec.authors = ["Wilker Lúcio", "Kris Kowalik"]
+  end
+rescue LoadError
+  puts "Jeweler not available. Install it with: gem install jeweler"
+end
+
+
 desc 'Default: run unit tests.'
 task :default => :test
 
