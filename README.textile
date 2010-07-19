@@ -4,7 +4,11 @@ Mongoid Taggable provides some helpers to create taggable documents.
 
 h2. Installation
 
-You need simple install it as a Rails Plugin:
+You can simple install from rubygems:
+
+bc. gem install mongoid_taggable
+
+or as a Rails Plugin:
 
 bc. script/plugin install git://github.com/wilkerlucio/mongoid_taggable.git
 
