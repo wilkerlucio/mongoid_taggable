@@ -8,6 +8,10 @@ You can simple install from rubygems:
 
 bc. gem install mongoid_taggable
 
+or in Gemfile:
+
+bc. gem 'mongoid_taggable'
+
 or as a Rails Plugin:
 
 bc. script/plugin install git://github.com/wilkerlucio/mongoid_taggable.git
