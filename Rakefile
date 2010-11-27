@@ -10,7 +10,7 @@ begin
     gemspec.summary = "Mongoid taggable behaviour"
     gemspec.description = "Mongoid Taggable provides some helpers to create taggable documents."
     gemspec.email = "wilkerlucio@gmail.com"
-    gemspec.homepage = "http://github.com/kriss/mongo_taggable"
+    gemspec.homepage = "http://github.com/wilkerlucio/mongo_taggable"
     gemspec.authors = ["Wilker Lúcio", "Kris Kowalik"]
   end
 rescue LoadError
