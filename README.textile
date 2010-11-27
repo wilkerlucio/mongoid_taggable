@@ -48,7 +48,7 @@ bc.. <% form_for @post do |f| %>
   </p>
 <% end %>
 
-p. In this case, the text fields for tags should receive the list of tags separated by colon (above in this document you will see how to change the separator)
+p. In this case, the text fields for tags should receive the list of tags separated by comma (below in this document you will see how to change the separator)
 
 p. Them your document will have the @tags@ and @tags_array@ getter and setter. The @tags@ you use as a plain string with tags separated by colon, the @tags_array@ is an array with tags, these two properties are automatic synchronized.
 
@@ -72,28 +72,28 @@ Post.tags_with_weight # will retrieve:
 #   ['zip', 1]
 # ]
 
-p. If you don't want to use this feature, its good to disable for improve performance:
+p. If you don't want to use this feature, it is good to disable it to improve performance:
 
 bc.. class Post
   include Mongoid::Document
   include Mongoid::Taggable
-  
+
   disable_tags_index! # will disable index creation
-  
+
   field :title
   field :content
 end
 
 h2. Changing default separator
 
-To change default separator you just need to call @tags_separator@ method on class:
+To change the default separator you may call the @tags_separator@ class method:
 
 bc.. class Post
   include Mongoid::Document
   include Mongoid::Taggable
-  
+
   tags_separator ';' # will change tags separator to ;
-  
+
   field :title
   field :content
 end
