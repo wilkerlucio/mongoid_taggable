@@ -17,7 +17,7 @@ module Mongoid::Taggable
 
   included do
     field :tags_array, :type => Array
-    index [['tags_array', Mongo::ASCENDING]]
+    index :tags_array
 
     set_callback :save, :after do |document|
       document.class.save_tags_index!
