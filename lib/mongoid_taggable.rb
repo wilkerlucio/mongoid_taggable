@@ -1,1 +1,3 @@
+require 'active_support/concern'
+
 require File.join(File.dirname(__FILE__), 'mongoid/taggable')

@@ -13,24 +13,20 @@
 # limitations under the License.
 
 module Mongoid::Taggable
-  def self.included(base)
-    # create fields for tags and index it
-    base.field :tags_array, :type => Array
-    base.index [['tags_array', Mongo::ASCENDING]]
-    
-    # add callback to save tags index
-    base.after_save do |document|
+  extend ActiveSupport::Concern
+
+  included do
+    field :tags_array, :type => Array
+    index [['tags_array', Mongo::ASCENDING]]
+
+    set_callback :save, :after do |document|
       document.class.save_tags_index!
     end
-    
-    # extend model
-    base.extend         ClassMethods
-    base.send :include, InstanceMethods
-    
-    # enable indexing as default
-    base.enable_tags_index!
+
+    # enable tag weight indexing as default
+    enable_tags_index!
   end
-  
+
   module ClassMethods
     # get an array with all defined tags for this model, this list returns
     # an array of distinct ordered list of tags defined in all documents
