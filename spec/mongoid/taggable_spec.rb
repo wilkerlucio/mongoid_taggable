@@ -114,9 +114,9 @@ describe Mongoid::Taggable do
 
   context "#self.tagged_with" do
     before(:each) do
-      @m1 = MyModel.make! :tags => "tag1,tag2,tag3"
-      @m2 = MyModel.make! :tags => "tag2"
-      @m3 = MyModel.make! :tags => "tag1", :attr => "value"
+      @m1 = MyModel.create! :tags => "tag1,tag2,tag3"
+      @m2 = MyModel.create! :tags => "tag2"
+      @m3 = MyModel.create! :tags => "tag1", :attr => "value"
     end
 
     it "should return all tags with single tag input" do
