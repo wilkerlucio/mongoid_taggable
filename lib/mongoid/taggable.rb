@@ -93,7 +93,7 @@ module Mongoid::Taggable
       coll.map_reduce(map, reduce, :out => tags_index_collection)
     end
 
-    def self.tagged_with(_tags)
+    def tagged_with(_tags)
       _tags =  convert_string_tags_to_array(_tags) if _tags.is_a? String 
       criteria.all_in(:tags_array => _tags)
     end
