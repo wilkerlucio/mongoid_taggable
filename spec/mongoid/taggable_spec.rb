@@ -17,6 +17,8 @@ require File.join(File.dirname(__FILE__), %w[.. spec_helper])
 class MyModel
   include Mongoid::Document
   include Mongoid::Taggable
+
+  field :attr
 end
 
 describe Mongoid::Taggable do
