@@ -109,4 +109,28 @@ describe Mongoid::Taggable do
       end
     end
   end
+
+  context "#self.tagged_with" do
+    before(:each) do
+      @m1 = MyModel.make! :tags => "tag1,tag2,tag3"
+      @m2 = MyModel.make! :tags => "tag2"
+      @m3 = MyModel.make! :tags => "tag1", :attr => "value"
+    end
+
+    it "should return all tags with single tag input" do
+      MyModel.tagged_with("tag2").sort_by{|a| a.id.to_s}.should == [@m1, @m2].sort_by{|a| a.id.to_s}
+    end
+    
+    it "should return all tags with tags array input" do
+      MyModel.tagged_with(%w{tag2 tag1}).should == [@m1]
+    end
+    
+    it "should return all tags with tags string input" do
+      MyModel.tagged_with("tag2,tag1").should == [@m1]
+    end
+    
+    it "should be able to be part of methods chain" do
+      MyModel.tagged_with("tag1").where(:attr => "value").should == [@m3]
+    end
+  end
 end
