@@ -18,6 +18,8 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = '>= 1.3.6'
 
+  s.add_runtime_dependency('mongoid', ['~> 2.0.0.beta.20'])
+  s.add_development_dependency('database_cleaner', ['~> 0.6.0'])
   s.add_development_dependency('rake',  ['~> 0.8.7'])
   s.add_development_dependency('rspec', ['~> 2.1.0'])
 
