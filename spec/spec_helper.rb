@@ -1,7 +1,7 @@
 begin
   require File.join(File.dirname(__FILE__), %w[.. .. .. .. spec spec_helper])
 rescue LoadError
-  puts "You need to install rspec in your base app"
+  puts "You need to install rspec or other dependencies for your base app"
   exit
 end
 
