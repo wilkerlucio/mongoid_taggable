@@ -72,7 +72,7 @@ describe Mongoid::Taggable do
       MyModel.tags_index_collection.should == "my_models_tags_index"
     end
 
-    context "retriving index" do
+    context "retrieving index" do
       before :each do
         MyModel.create!(:tags => "food,ant,bee")
         MyModel.create!(:tags => "juice,food,bee,zip")
@@ -122,15 +122,15 @@ describe Mongoid::Taggable do
     it "should return all tags with single tag input" do
       MyModel.tagged_with("tag2").sort_by{|a| a.id.to_s}.should == [@m1, @m2].sort_by{|a| a.id.to_s}
     end
-    
+
     it "should return all tags with tags array input" do
       MyModel.tagged_with(%w{tag2 tag1}).should == [@m1]
     end
-    
+
     it "should return all tags with tags string input" do
       MyModel.tagged_with("tag2,tag1").should == [@m1]
     end
-    
+
     it "should be able to be part of methods chain" do
       MyModel.tagged_with("tag1").where(:attr => "value").should == [@m3]
     end

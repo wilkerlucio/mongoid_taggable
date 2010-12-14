@@ -105,7 +105,7 @@ module Mongoid::Taggable
     end
 
     def tags=(tags)
-      self.tags_array = convert_string_tags_to_array(tags)
+      self.tags_array = self.class.convert_string_tags_to_array(tags)
     end
   end
 end
