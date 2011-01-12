@@ -1,2 +1,4 @@
 .bundle
 rdoc
+Gemfile.lock
+
