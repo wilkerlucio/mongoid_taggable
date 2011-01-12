@@ -4,7 +4,7 @@ Mongoid Taggable provides some helpers to create taggable documents.
 
 h2. Installation
 
-You can simple install from rubygems:
+You can simply install from rubygems:
 
 bc. gem install mongoid_taggable
 
@@ -30,7 +30,7 @@ bc.. class Post
   taggable
 end
 
-p. Them in your form:
+p. Then in your form:
 
 bc.. <% form_for @post do |f| %>
   <p>
@@ -54,11 +54,21 @@ p. In this case, the text fields for tags should receive the list of tags separa
 
 p. Then your document will have the @tags@ and @tags_array@ getter and setter. The @tags@ you use as a plain string with tags separated by comma, and the @tags_array@ is an array with tags. These two properties are automatically synchronized.
 
-h2. Tags Indexing
+h2. Tag Aggregation with Counts
 
-This lib will automatically create an index of tags and their counts for you after saving the document, useful for getting a list of all tags used in documents of this collection or to create a tag cloud. See the following example to understand how to use it:
+This lib can automatically create an aggregate collection of tags and their counts for you, updated as documents are saved. This is useful for getting a list of all tags used in documents of this collection or to create a tag cloud. This is disabled by default for sake of performance where it is unneeded -- see the following example to understand how to use it:
 
-bc.. Post.create!(:tags => "food,ant,bee")
+bc.. class Post
+  include Mongoid::Document
+  include Mongoid::Taggable
+
+  field :title
+  field :content
+
+  taggable :aggregation => true
+end
+
+Post.create!(:tags => "food,ant,bee")
 Post.create!(:tags => "juice,food,bee,zip")
 Post.create!(:tags => "honey,strip,food")
 
@@ -73,18 +83,6 @@ Post.tags_with_weight # will retrieve:
 #   ['strip', 1],
 #   ['zip', 1]
 # ]
-
-p. If you don't want to use this feature, it is good to disable it to improve performance:
-
-bc.. class Post
-  include Mongoid::Document
-  include Mongoid::Taggable
-
-  field :title
-  field :content
-
-  taggable :index_weights => false
-end
 
 h2. Changing default separator
 

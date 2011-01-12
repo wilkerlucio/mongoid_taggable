@@ -16,10 +16,10 @@ module Mongoid::Taggable
   extend ActiveSupport::Concern
 
   included do
-    cattr_accessor :tags_field, :tags_separator, :index_tag_weights
+    cattr_accessor :tags_field, :tags_separator, :tag_aggregation
 
-    set_callback :save, :after, :if => proc { self.class.index_tag_weights? } do |document|
-      document.class.save_tags_index!
+    set_callback :save, :after, :if => proc { self.class.aggregate_tags? } do |document|
+      document.class.aggregate_tags!
     end
   end
 
@@ -28,12 +28,12 @@ module Mongoid::Taggable
       options = args.extract_options!
       options.reverse_merge!(
         :separator => ',',
-        :index_weights => true
+        :aggregation => false
       )
 
-      self.tags_field        = args.blank? ? :tags_array : args.shift
-      self.tags_separator    = options[:separator]
-      self.index_tag_weights = options[:index_weights]
+      self.tags_field      = args.blank? ? :tags_array : args.shift
+      self.tags_separator  = options[:separator]
+      self.tag_aggregation = options[:aggregation]
 
       field tags_field, :type => Array
       index tags_field
@@ -44,26 +44,26 @@ module Mongoid::Taggable
     # of this model
     def tags
       db = Mongoid::Config.instance.master
-      db.collection(tags_index_collection).find.to_a.map{ |r| r["_id"] }
+      db.collection(tags_aggregation_collection).find.to_a.map{ |r| r["_id"] }
     end
 
     # retrieve the list of tags with weight(count), this is useful for
     # creating tag clouds
     def tags_with_weight
       db = Mongoid::Config.instance.master
-      db.collection(tags_index_collection).find.to_a.map{ |r| [r["_id"], r["value"]] }
+      db.collection(tags_aggregation_collection).find.to_a.map{ |r| [r["_id"], r["value"]] }
     end
 
-    def index_tag_weights?
-      !!index_tag_weights
+    def aggregate_tags?
+      !!tag_aggregation
     end
 
-    def tags_index_collection
-      "#{collection_name}_tags_index"
+    def tags_aggregation_collection
+      "#{collection_name}_tags_aggregation"
     end
 
-    def save_tags_index!
-      return unless index_tag_weights?
+    def aggregate_tags!
+      return unless aggregate_tags?
 
       db = Mongoid::Config.instance.master
       coll = db.collection(collection_name)
@@ -88,7 +88,7 @@ module Mongoid::Taggable
         return count;
       }"
 
-      coll.map_reduce(map, reduce, :out => tags_index_collection)
+      coll.map_reduce(map, reduce, :out => tags_aggregation_collection)
     end
 
     def tagged_with(_tags)

@@ -68,12 +68,25 @@ describe Mongoid::Taggable do
     end
   end
 
-  context "indexing tags" do
-    it "should generate the index collection name based on model" do
-      MyModel.tags_index_collection.should == "my_models_tags_index"
+  context "aggregating tags with counts" do
+    it "should generate the aggregate collection name based on model" do
+      MyModel.tags_aggregation_collection.should == "my_models_tags_aggregation"
     end
 
-    context "retrieving index" do
+    it "should be disabled by default" do
+      MyModel.create!(:tags => "sample,tags")
+      MyModel.tags.should == []
+    end
+
+    context "when enabled" do
+      before :all do
+        MyModel.tag_aggregation = true
+      end
+
+      after :all do
+        MyModel.tag_aggregation = false
+      end
+
       before :each do
         MyModel.create!(:tags => "food,ant,bee")
         MyModel.create!(:tags => "juice,food,bee,zip")
@@ -94,21 +107,6 @@ describe Mongoid::Taggable do
           ['strip', 1],
           ['zip', 1]
         ]
-      end
-    end
-
-    context "avoiding index generation" do
-      before :all do
-        MyModel.index_tag_weights = false
-      end
-
-      after :all do
-        MyModel.index_tag_weights = true
-      end
-
-      it "should not generate index" do
-        MyModel.create!(:tags => "sample,tags")
-        MyModel.tags.should == []
       end
     end
   end
