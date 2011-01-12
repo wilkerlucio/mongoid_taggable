@@ -19,6 +19,7 @@ class MyModel
   include Mongoid::Taggable
 
   field :attr
+  taggable
 end
 
 describe Mongoid::Taggable do
@@ -45,11 +46,11 @@ describe Mongoid::Taggable do
 
   context "changing separator" do
     before :all do
-      MyModel.tags_separator ";"
+      MyModel.tags_separator = ";"
     end
 
     after :all do
-      MyModel.tags_separator ","
+      MyModel.tags_separator = ","
     end
 
     before :each do
@@ -98,11 +99,11 @@ describe Mongoid::Taggable do
 
     context "avoiding index generation" do
       before :all do
-        MyModel.disable_tags_index!
+        MyModel.index_tag_weights = false
       end
 
       after :all do
-        MyModel.enable_tags_index!
+        MyModel.index_tag_weights = true
       end
 
       it "should not generate index" do

@@ -16,18 +16,29 @@ module Mongoid::Taggable
   extend ActiveSupport::Concern
 
   included do
-    field :tags_array, :type => Array
-    index :tags_array
+    cattr_accessor :tags_field, :tags_separator, :index_tag_weights
 
-    set_callback :save, :after do |document|
+    set_callback :save, :after, :if => proc { self.class.index_tag_weights? } do |document|
       document.class.save_tags_index!
     end
-
-    # enable tag weight indexing as default
-    enable_tags_index!
   end
 
   module ClassMethods
+    def taggable(*args)
+      options = args.extract_options!
+      options.reverse_merge!(
+        :separator => ',',
+        :index_weights => true
+      )
+
+      self.tags_field        = args.blank? ? :tags_array : args.shift
+      self.tags_separator    = options[:separator]
+      self.index_tag_weights = options[:index_weights]
+
+      field tags_field, :type => Array
+      index tags_field
+    end
+
     # get an array with all defined tags for this model, this list returns
     # an array of distinct ordered list of tags defined in all documents
     # of this model
@@ -36,24 +47,15 @@ module Mongoid::Taggable
       db.collection(tags_index_collection).find.to_a.map{ |r| r["_id"] }
     end
 
-    # retrieve the list of tags with weight(count), this is usefull for
+    # retrieve the list of tags with weight(count), this is useful for
     # creating tag clouds
     def tags_with_weight
       db = Mongoid::Config.instance.master
       db.collection(tags_index_collection).find.to_a.map{ |r| [r["_id"], r["value"]] }
     end
 
-    def disable_tags_index!
-      @do_tags_index = false
-    end
-
-    def enable_tags_index!
-      @do_tags_index = true
-    end
-
-    def tags_separator(separator = nil)
-      @tags_separator = separator if separator
-      @tags_separator || ','
+    def index_tag_weights?
+      !!index_tag_weights
     end
 
     def tags_index_collection
@@ -61,7 +63,7 @@ module Mongoid::Taggable
     end
 
     def save_tags_index!
-      return unless @do_tags_index
+      return unless index_tag_weights?
 
       db = Mongoid::Config.instance.master
       coll = db.collection(collection_name)
@@ -90,8 +92,8 @@ module Mongoid::Taggable
     end
 
     def tagged_with(_tags)
-      _tags =  convert_string_tags_to_array(_tags) if _tags.is_a? String 
-      criteria.all_in(:tags_array => _tags)
+      _tags = convert_string_tags_to_array(_tags) if _tags.is_a? String
+      criteria.all_in(tags_field => _tags)
     end
 
     def convert_string_tags_to_array(_tags)
@@ -109,3 +111,4 @@ module Mongoid::Taggable
     end
   end
 end
+
