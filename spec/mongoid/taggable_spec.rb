@@ -64,7 +64,7 @@ describe Mongoid::Taggable do
     end
   end
 
-  context "aggregating tags with counts" do
+  context "tag & count aggregation" do
     it "should generate the aggregate collection name based on model" do
       MyModel.tags_aggregation_collection.should == "my_models_tags_aggregation"
     end
@@ -91,11 +91,11 @@ describe Mongoid::Taggable do
         ]
       end
 
-      it "should retrieve the list of all saved tags distinct and ordered" do
+      it "should list all saved tags distinct and ordered" do
         MyModel.tags.should == %w[ant bee food honey juice strip zip]
       end
 
-      it "should retrieve a list of tags with weight" do
+      it "should list all tags with their weights" do
         MyModel.tags_with_weight.should == [
           ['ant', 1],
           ['bee', 2],
@@ -105,6 +105,16 @@ describe Mongoid::Taggable do
           ['strip', 1],
           ['zip', 1]
         ]
+      end
+
+      it "should update when tags are edited" do
+        MyModel.should_receive(:aggregate_tags!)
+        models.first.update_attributes(:tags => 'changed')
+      end
+
+      it "should not update if tags are unchanged" do
+        MyModel.should_not_receive(:aggregate_tags!)
+        models.first.update_attributes(:attr => "changed")
       end
     end
   end

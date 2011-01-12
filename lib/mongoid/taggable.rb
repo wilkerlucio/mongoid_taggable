@@ -18,7 +18,7 @@ module Mongoid::Taggable
   included do
     cattr_accessor :tags_field, :tags_separator, :tag_aggregation
 
-    set_callback :save, :after, :if => proc { self.class.aggregate_tags? } do |document|
+    set_callback :save, :after, :if => proc { should_update_tag_aggregation? } do |document|
       document.class.aggregate_tags!
     end
   end
@@ -109,6 +109,13 @@ module Mongoid::Taggable
     def tags=(tags)
       self.tags_array = self.class.convert_string_tags_to_array(tags)
     end
+
+  private
+    def should_update_tag_aggregation?
+      self.class.aggregate_tags? &&                   # vvv new record
+        previous_changes.include?(tags_field.to_s) || previous_changes.blank?
+    end
   end
+
 end
 
