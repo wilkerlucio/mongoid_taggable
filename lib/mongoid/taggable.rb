@@ -31,12 +31,14 @@ module Mongoid::Taggable
         :aggregation => false
       )
 
-      self.tags_field      = args.blank? ? :tags_array : args.shift
+      self.tags_field      = args.blank? ? :tags : args.shift
       self.tags_separator  = options[:separator]
       self.tag_aggregation = options[:aggregation]
 
       field tags_field, :type => Array
       index tags_field
+
+      define_tag_field_accessors(tags_field)
     end
 
     # get an array with all defined tags for this model, this list returns
@@ -69,12 +71,12 @@ module Mongoid::Taggable
       coll = db.collection(collection_name)
 
       map = "function() {
-        if (!this.tags_array) {
+        if (!this.#{tags_field}) {
           return;
         }
 
-        for (index in this.tags_array) {
-          emit(this.tags_array[index], 1);
+        for (index in this.#{tags_field}) {
+          emit(this.#{tags_field}[index], 1);
         }
       }"
 
@@ -99,17 +101,19 @@ module Mongoid::Taggable
     def convert_string_tags_to_array(_tags)
       (_tags).split(tags_separator).map(&:strip)
     end
+
+  private
+
+    def define_tag_field_accessors(name)
+      define_method "#{name}_with_taggable=" do |value|
+        value = self.class.convert_string_tags_to_array(value) if value.is_a? String
+        send("#{name}_without_taggable=", value)
+      end
+      alias_method_chain "#{name}=", :taggable
+    end
   end
 
   module InstanceMethods
-    def tags
-      (tags_array || []).join(self.class.tags_separator)
-    end
-
-    def tags=(tags)
-      self.tags_array = self.class.convert_string_tags_to_array(tags)
-    end
-
   private
     def should_update_tag_aggregation?
       self.class.aggregate_tags? &&                   # vvv new record

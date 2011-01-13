@@ -22,23 +22,34 @@ class MyModel
   taggable
 end
 
+class Article
+  include Mongoid::Document
+  include Mongoid::Taggable
+
+  taggable :keywords
+end
+
 describe Mongoid::Taggable do
   context "saving tags from plain text" do
     let(:model) { MyModel.new }
 
     it "should set tags array from string" do
       model.tags = "some,new,tag"
-      model.tags_array.should == %w[some new tag]
-    end
-
-    it "should retrieve tags string from array" do
-      model.tags_array = %w[some new tags]
-      model.tags.should == "some,new,tags"
+      model.tags.should == %w[some new tag]
     end
 
     it "should strip tags before put in array" do
       model.tags = "now ,  with, some spaces  , in places "
-      model.tags_array.should == ["now", "with", "some spaces", "in places"]
+      model.tags.should == ["now", "with", "some spaces", "in places"]
+    end
+  end
+
+  context "with customized tag field name" do
+    let(:article) { Article.new }
+
+    it "should set tags array from string" do
+      article.keywords = "some,new,tag"
+      article.keywords.should == %w[some new tag]
     end
   end
 
@@ -55,12 +66,7 @@ describe Mongoid::Taggable do
 
     it "should split with custom separator" do
       model.tags = "some;other;separator"
-      model.tags_array.should == %w[some other separator]
-    end
-
-    it "should join with custom separator" do
-      model.tags_array = %w[some other sep]
-      model.tags.should == "some;other;sep"
+      model.tags.should == %w[some other separator]
     end
   end
 

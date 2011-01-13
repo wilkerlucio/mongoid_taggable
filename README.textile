@@ -30,7 +30,7 @@ bc.. class Post
   taggable
 end
 
-p. Then in your form:
+p. Then in your form, for example:
 
 bc.. <% form_for @post do |f| %>
   <p>
@@ -43,16 +43,16 @@ bc.. <% form_for @post do |f| %>
   </p>
   <p>
     <%= f.label :tags %><br />
-    <%= f.text_field :tags %>
+    <%= text_field_tag 'post[tags]', (@post.tags.join(', ') if @post.tags) %>
   </p>
   <p>
     <button type="submit">Send</button>
   </p>
 <% end %>
 
-p. In this case, the text fields for tags should receive the list of tags separated by comma (below in this document you will see how to change the separator).
+p. You can of course use helpers or a @FormBuilder@ extension to express this in a prettier way. In this case, the text field for tags should receive the list of tags separated by comma (below in this document you will see how to change the separator).
 
-p. Then your document will have the @tags@ and @tags_array@ getter and setter. The @tags@ you use as a plain string with tags separated by comma, and the @tags_array@ is an array with tags. These two properties are automatically synchronized.
+p. Your document will have a custom @tags=@ setter which can accept either an ordinary Array or this separator-delineated String.
 
 h2. Tag Aggregation with Counts
 
