@@ -24,6 +24,25 @@ module Mongoid::Taggable
   end
 
   module ClassMethods
+    # Macro to declare a document class as taggable, specify field name
+    # for tags, and set options for tagging behavior.
+    #
+    # @example Define a taggable document.
+    #
+    #   class Article
+    #     include Mongoid::Document
+    #     include Mongoid::Taggable
+    #     taggable :keywords, :separator => ' ', :aggregation => true
+    #   end
+    #
+    # @param [ Symbol ] field The name of the field for tags.
+    # @param [ Hash ] options Options for taggable behavior.
+    #
+    # @option options [ String ] :separator The tag separator to
+    #   convert from; defaults to ','
+    # @option options [ true, false ] :aggregation Whether or not to
+    #   aggregate counts of tags within the document collection using
+    #   map/reduce; defaults to false
     def taggable(*args)
       options = args.extract_options!
       options.reverse_merge!(
@@ -56,14 +75,18 @@ module Mongoid::Taggable
       db.collection(tags_aggregation_collection).find.to_a.map{ |r| [r["_id"], r["value"]] }
     end
 
+    # Predicate for whether or not map/reduce aggregation is enabled
     def aggregate_tags?
       !!tag_aggregation
     end
 
+    # Collection name for storing results of tag count aggregation
     def tags_aggregation_collection
       "#{collection_name}_tags_aggregation"
     end
 
+    # Execute map/reduce operation to aggregate tag counts for document
+    # class
     def aggregate_tags!
       return unless aggregate_tags?
 
@@ -93,17 +116,31 @@ module Mongoid::Taggable
       coll.map_reduce(map, reduce, :out => tags_aggregation_collection)
     end
 
+    # Find documents tagged with all tags passed as a parameter, given
+    # as an Array or a String using the configured separator.
+    #
+    # @example Find matching all tags in an Array.
+    #   Article.tagged_with(['ruby', 'mongodb'])
+    # @example Find matching all tags in a String.
+    #   Article.tagged_with('ruby, mongodb')
+    #
+    # @param [ Array<String, Symbol>, String ] _tags Tags to match.
+    # @return [ Criteria ] A new criteria.
     def tagged_with(_tags)
       _tags = convert_string_tags_to_array(_tags) if _tags.is_a? String
       criteria.all_in(tags_field => _tags)
     end
 
+    # Helper method to convert a String to an Array based on the
+    # configured tag separator.
     def convert_string_tags_to_array(_tags)
       (_tags).split(tags_separator).map(&:strip)
     end
 
   private
 
+    # Define modifier for the configured tag field name that overrides
+    # the default to transparently convert tags given as a String.
     def define_tag_field_accessors(name)
       define_method "#{name}_with_taggable=" do |value|
         value = self.class.convert_string_tags_to_array(value) if value.is_a? String
@@ -115,8 +152,10 @@ module Mongoid::Taggable
 
   module InstanceMethods
   private
+    # Guard for callback that executes tag count aggregation, checking
+    # the option is enabled and a document change modified tags.
     def should_update_tag_aggregation?
-      self.class.aggregate_tags? &&                   # vvv new record
+      self.class.aggregate_tags? &&                   # vvv was a new record
         previous_changes.include?(tags_field.to_s) || previous_changes.blank?
     end
   end
