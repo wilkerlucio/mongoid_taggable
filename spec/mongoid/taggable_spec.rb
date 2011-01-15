@@ -29,6 +29,11 @@ class Article
   taggable :keywords
 end
 
+class Editorial < Article
+  self.tags_separator = ' '
+  self.tag_aggregation = true
+end
+
 describe Mongoid::Taggable do
   context "saving tags from plain text" do
     let(:model) { MyModel.new }
@@ -150,4 +155,19 @@ describe Mongoid::Taggable do
       MyModel.tagged_with("tag1").where(:attr => "value").should == [models.last]
     end
   end
+
+  context "a subclass of a taggable document" do
+    let(:editorial) { Editorial.new }
+
+    it "can enable tag aggregation exclusively" do
+      Article.tag_aggregation.should == false
+      Editorial.tag_aggregation.should == true
+    end
+
+    it "can split with a different separator" do
+      editorial.keywords = 'opinion politics'
+      editorial.keywords.should == %w[opinion politics]
+    end
+  end
 end
+
