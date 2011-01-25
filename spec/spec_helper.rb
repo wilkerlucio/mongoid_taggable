@@ -1,8 +1,8 @@
-begin
-  require File.join(File.dirname(__FILE__), %w[.. .. .. .. spec spec_helper])
-rescue LoadError
-  puts "You need to install rspec in your base app"
-  exit
-end
+$: << File.expand_path("../../lib", __FILE__)
 
-plugin_spec_dir = File.dirname(__FILE__)
+require 'mongoid'
+require 'mongoid_taggable'
+
+Mongoid.configure do |config|
+  config.master = Mongo::Connection.new.db("mongoid_taggable_test")
+end
