@@ -36,14 +36,14 @@ module Mongoid::Taggable
     # an array of distinct ordered list of tags defined in all documents
     # of this model
     def tags
-      db = Mongoid::Config.instance.master
+      db = Mongoid::Config.master
       db.collection(tags_index_collection).find.to_a.map{ |r| r["_id"] }
     end
 
     # retrieve the list of tags with weight(count), this is usefull for
     # creating tag clouds
     def tags_with_weight
-      db = Mongoid::Config.instance.master
+      db = Mongoid::Config.master
       db.collection(tags_index_collection).find.to_a.map{ |r| [r["_id"], r["value"]] }
     end
 
@@ -67,7 +67,7 @@ module Mongoid::Taggable
     def save_tags_index!
       return unless @do_tags_index
 
-      db = Mongoid::Config.instance.master
+      db = Mongoid::Config.master
       coll = db.collection(collection_name)
 
       map = "function() {
