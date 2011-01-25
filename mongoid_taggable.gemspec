@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{mongoid_taggable}
-  s.version = "0.1.1"
+  s.version = "0.1.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Wilker L\303\272cio", "Kris Kowalik"]
-  s.date = %q{2010-07-26}
+  s.authors = ["Wilker Lucio", "Kris Kowalik"]
+  s.date = %q{2011-01-25}
   s.description = %q{Mongoid Taggable provides some helpers to create taggable documents.}
   s.email = %q{wilkerlucio@gmail.com}
   s.extra_rdoc_files = [
@@ -17,21 +17,19 @@ Gem::Specification.new do |s|
      "README.textile"
   ]
   s.files = [
-    "LICENSE",
+    ".gitignore",
+     "LICENSE",
      "README.textile",
      "Rakefile",
      "init.rb",
-     "install.rb",
      "lib/mongoid/taggable.rb",
      "lib/mongoid_taggable.rb",
      "mongoid_taggable.gemspec",
      "rails/init.rb",
      "spec/mongoid/taggable_spec.rb",
-     "spec/spec_helper.rb",
-     "tasks/mongoid_taggable_tasks.rake",
-     "uninstall.rb"
+     "spec/spec_helper.rb"
   ]
-  s.homepage = %q{http://github.com/kriss/mongo_taggable}
+  s.homepage = %q{http://github.com/wilkerlucio/mongo_taggable}
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.3.7}
