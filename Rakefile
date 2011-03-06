@@ -1,23 +1,19 @@
+require 'bundler'
+Bundler.setup
+
 require 'rake'
 require 'rake/rdoctask'
 require 'rspec'
 require 'rspec/core/rake_task'
 
-begin
-  require 'jeweler'
-  Jeweler::Tasks.new do |gemspec|
-    gemspec.name = "mongoid_taggable"
-    gemspec.version = "0.1.2"
-    gemspec.summary = "Mongoid taggable behaviour"
-    gemspec.description = "Mongoid Taggable provides some helpers to create taggable documents."
-    gemspec.email = "wilkerlucio@gmail.com"
-    gemspec.homepage = "http://github.com/wilkerlucio/mongo_taggable"
-    gemspec.authors = ["Wilker Lucio", "Kris Kowalik"]
-  end
-rescue LoadError
-  puts "Jeweler not available. Install it with: gem install jeweler"
+task :gem => :build
+task :build do
+  system "gem build mongoid_taggable.gemspec"
 end
 
+task :install => :build do
+  system "gem install mongoid_taggable-#{Mongoid::Taggable::VERSION}.gem"
+end
 
 desc 'Default: run unit tests.'
 task :default => :spec
@@ -34,3 +30,6 @@ Rake::RDocTask.new(:rdoc) do |rdoc|
   rdoc.rdoc_files.include('README*')
   rdoc.rdoc_files.include('lib/**/*.rb')
 end
+
+desc 'Default: run unit tests.'
+task :default => :spec

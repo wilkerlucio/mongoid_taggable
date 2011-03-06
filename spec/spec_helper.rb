@@ -1,20 +1,26 @@
-$: << File.expand_path("../../lib", __FILE__)
+require 'bundler'
+Bundler.setup
 
+require 'mongoid'
 require 'database_cleaner'
 
+require 'mongoid_taggable'
+
 RSpec.configure do |config|
+  config.mock_with :rspec
+
+  # http://mongoid.org/docs/integration/
   config.before(:suite) do
     DatabaseCleaner.strategy = :truncation
+    DatabaseCleaner.orm = 'mongoid'
   end
 
-  config.after(:each) do
+  config.before(:each) do
     DatabaseCleaner.clean
   end
 end
 
-require 'mongoid'
-require 'mongoid_taggable'
-
 Mongoid.configure do |config|
-  config.master = Mongo::Connection.new.db("mongoid_taggable_test")
+  config.allow_dynamic_fields = true
+  config.master = Mongo::Connection.new.db('mongoid_taggable_test')
 end

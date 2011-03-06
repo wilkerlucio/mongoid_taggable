@@ -4,7 +4,7 @@ Mongoid Taggable provides some helpers to create taggable documents.
 
 h2. Installation
 
-You can simple install from rubygems:
+You can simply install from rubygems:
 
 bc. gem install mongoid_taggable
 
@@ -18,7 +18,7 @@ bc. script/plugin install git://github.com/wilkerlucio/mongoid_taggable.git
 
 h2. Basic Usage
 
-To make a document taggable you just need to include Mongoid::Taggable into your document:
+To make a document taggable you need to include Mongoid::Taggable into your document and call the @taggable@ macro with optional arguments:
 
 bc.. class Post
   include Mongoid::Document
@@ -26,9 +26,11 @@ bc.. class Post
   
   field :title
   field :content
+
+  taggable
 end
 
-p. Them in your form:
+p. Then in your form, for example:
 
 bc.. <% form_for @post do |f| %>
   <p>
@@ -41,22 +43,32 @@ bc.. <% form_for @post do |f| %>
   </p>
   <p>
     <%= f.label :tags %><br />
-    <%= f.text_field :tags %>
+    <%= text_field_tag 'post[tags]', (@post.tags.join(', ') if @post.tags) %>
   </p>
   <p>
     <button type="submit">Send</button>
   </p>
 <% end %>
 
-p. In this case, the text fields for tags should receive the list of tags separated by comma (below in this document you will see how to change the separator)
+p. You can of course use helpers or a @FormBuilder@ extension to express this in a prettier way. In this case, the text field for tags should receive the list of tags separated by comma (below in this document you will see how to change the separator).
 
-p. Then your document will have the @tags@ and @tags_array@ getter and setter. The @tags@ you use as a plain string with tags separated by comma, and the @tags_array@ is an array with tags. These two properties are automatically synchronized.
+p. Your document will have a custom @tags=@ setter which can accept either an ordinary Array or this separator-delineated String.
 
-h2. Tags Indexing
+h2. Tag Aggregation with Counts
 
-This lib will automatically create an index of tags and their counts for you after saving the document, useful for getting a list of all tags used in documents of this collection or to create a tag cloud. See the following example to understand how to use it:
+This lib can automatically create an aggregate collection of tags and their counts for you, updated as documents are saved. This is useful for getting a list of all tags used in documents of this collection or to create a tag cloud. This is disabled by default for sake of performance where it is unneeded -- see the following example to understand how to use it:
 
-bc.. Post.create!(:tags => "food,ant,bee")
+bc.. class Post
+  include Mongoid::Document
+  include Mongoid::Taggable
+
+  field :title
+  field :content
+
+  taggable :aggregation => true
+end
+
+Post.create!(:tags => "food,ant,bee")
 Post.create!(:tags => "juice,food,bee,zip")
 Post.create!(:tags => "honey,strip,food")
 
@@ -72,28 +84,17 @@ Post.tags_with_weight # will retrieve:
 #   ['zip', 1]
 # ]
 
-p. If you don't want to use this feature, it is good to disable it to improve performance:
-
-bc.. class Post
-  include Mongoid::Document
-  include Mongoid::Taggable
-
-  disable_tags_index! # will disable index creation
-
-  field :title
-  field :content
-end
-
 h2. Changing default separator
 
-To change the default separator you may call the @tags_separator@ class method:
+To change the default separator you may pass a @separator@ argument to the macro:
 
 bc.. class Post
   include Mongoid::Document
   include Mongoid::Taggable
 
-  tags_separator ';' # will change tags separator to ;
-
   field :title
   field :content
+
+  taggable :separator => ' '    # tags will be delineated by spaces
 end
+

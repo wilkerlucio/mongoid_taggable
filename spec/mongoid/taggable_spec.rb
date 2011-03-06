@@ -17,71 +17,96 @@ require File.join(File.dirname(__FILE__), %w[.. spec_helper])
 class MyModel
   include Mongoid::Document
   include Mongoid::Taggable
+
+  field :attr
+  taggable
+end
+
+class Article
+  include Mongoid::Document
+  include Mongoid::Taggable
+
+  taggable :keywords
+end
+
+class Editorial < Article
+  self.tags_separator = ' '
+  self.tag_aggregation = true
 end
 
 describe Mongoid::Taggable do
   context "saving tags from plain text" do
-    before :each do
-      @m = MyModel.new
-    end
+    let(:model) { MyModel.new }
 
     it "should set tags array from string" do
-      @m.tags = "some,new,tag"
-      @m.tags_array.should == %w[some new tag]
-    end
-
-    it "should retrieve tags string from array" do
-      @m.tags_array = %w[some new tags]
-      @m.tags.should == "some,new,tags"
+      model.tags = "some,new,tag"
+      model.tags.should == %w[some new tag]
     end
 
     it "should strip tags before put in array" do
-      @m.tags = "now ,  with, some spaces  , in places "
-      @m.tags_array.should == ["now", "with", "some spaces", "in places"]
+      model.tags = "now ,  with, some spaces  , in places "
+      model.tags.should == ["now", "with", "some spaces", "in places"]
+    end
+  end
+
+  context "with customized tag field name" do
+    let(:article) { Article.new }
+
+    it "should set tags array from string" do
+      article.keywords = "some,new,tag"
+      article.keywords.should == %w[some new tag]
     end
   end
 
   context "changing separator" do
     before :all do
-      MyModel.tags_separator ";"
+      MyModel.tags_separator = ";"
     end
 
     after :all do
-      MyModel.tags_separator ","
+      MyModel.tags_separator = ","
     end
 
-    before :each do
-      @m = MyModel.new
-    end
+    let(:model) { MyModel.new }
 
     it "should split with custom separator" do
-      @m.tags = "some;other;separator"
-      @m.tags_array.should == %w[some other separator]
-    end
-
-    it "should join with custom separator" do
-      @m.tags_array = %w[some other sep]
-      @m.tags.should == "some;other;sep"
+      model.tags = "some;other;separator"
+      model.tags.should == %w[some other separator]
     end
   end
 
-  context "indexing tags" do
-    it "should generate the index collection name based on model" do
-      MyModel.tags_index_collection.should == "my_models_tags_index"
+  context "tag & count aggregation" do
+    it "should generate the aggregate collection name based on model" do
+      MyModel.tags_aggregation_collection.should == "my_models_tags_aggregation"
     end
 
-    context "retriving index" do
-      before :each do
-        MyModel.create!(:tags => "food,ant,bee")
-        MyModel.create!(:tags => "juice,food,bee,zip")
-        MyModel.create!(:tags => "honey,strip,food")
+    it "should be disabled by default" do
+      MyModel.create!(:tags => "sample,tags")
+      MyModel.tags.should == []
+    end
+
+    context "when enabled" do
+      before :all do
+        MyModel.tag_aggregation = true
       end
 
-      it "should retrieve the list of all saved tags distinct and ordered" do
+      after :all do
+        MyModel.tag_aggregation = false
+      end
+
+      let!(:models) do
+        [
+          MyModel.create!(:tags => "food,ant,bee"),
+          MyModel.create!(:tags => "juice,food,bee,zip"),
+          MyModel.create!(:tags => "honey,strip,food")
+        ]
+      end
+
+      it "should list all saved tags distinct and ordered" do
         MyModel.tags.should == %w[ant bee food honey juice strip zip]
       end
 
-      it "should retrieve a list of tags with weight" do
+      it "should list all tags with their weights" do
         MyModel.tags_with_weight.should == [
           ['ant', 1],
           ['bee', 2],
@@ -92,21 +117,57 @@ describe Mongoid::Taggable do
           ['zip', 1]
         ]
       end
-    end
 
-    context "avoiding index generation" do
-      before :all do
-        MyModel.disable_tags_index!
+      it "should update when tags are edited" do
+        MyModel.should_receive(:aggregate_tags!)
+        models.first.update_attributes(:tags => 'changed')
       end
 
-      after :all do
-        MyModel.enable_tags_index!
-      end
-
-      it "should not generate index" do
-        MyModel.create!(:tags => "sample,tags")
-        MyModel.tags.should == []
+      it "should not update if tags are unchanged" do
+        MyModel.should_not_receive(:aggregate_tags!)
+        models.first.update_attributes(:attr => "changed")
       end
     end
   end
+
+  context "#self.tagged_with" do
+    let!(:models) do
+      [
+        MyModel.create!(:tags => "tag1,tag2,tag3"),
+        MyModel.create!(:tags => "tag2"),
+        MyModel.create!(:tags => "tag1", :attr => "value")
+      ]
+    end
+
+    it "should return all tags with single tag input" do
+      MyModel.tagged_with("tag2").sort_by{|a| a.id.to_s}.should == [models.first, models.second].sort_by{|a| a.id.to_s}
+    end
+
+    it "should return all tags with tags array input" do
+      MyModel.tagged_with(%w{tag2 tag1}).should == [models.first]
+    end
+
+    it "should return all tags with tags string input" do
+      MyModel.tagged_with("tag2,tag1").should == [models.first]
+    end
+
+    it "should be able to be part of methods chain" do
+      MyModel.tagged_with("tag1").where(:attr => "value").should == [models.last]
+    end
+  end
+
+  context "a subclass of a taggable document" do
+    let(:editorial) { Editorial.new }
+
+    it "can enable tag aggregation exclusively" do
+      Article.tag_aggregation.should == false
+      Editorial.tag_aggregation.should == true
+    end
+
+    it "can split with a different separator" do
+      editorial.keywords = 'opinion politics'
+      editorial.keywords.should == %w[opinion politics]
+    end
+  end
 end
+
