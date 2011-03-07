@@ -39,6 +39,11 @@ describe Mongoid::Taggable do
       @m.tags = "now ,  with, some spaces  , in places "
       @m.tags_array.should == ["now", "with", "some spaces", "in places"]
     end
+
+    it "should not put empty tags in array" do
+      @m.tags = "repetitive,, commas, shouldn't cause,,, empty tags"
+      @m.tags_array.should == ["repetitive", "commas", "shouldn't cause", "empty tags"]
+    end
   end
 
   context "changing separator" do

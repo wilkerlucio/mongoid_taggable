@@ -100,7 +100,7 @@ module Mongoid::Taggable
     end
 
     def tags=(tags)
-      self.tags_array = tags.split(self.class.tags_separator).map(&:strip)
+      self.tags_array = tags.split(self.class.tags_separator).map(&:strip).reject(&:blank?)
     end
   end
 end
