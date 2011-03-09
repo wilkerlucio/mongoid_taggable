@@ -135,6 +135,11 @@ describe Mongoid::Taggable do
         MyModel.should_not_receive(:aggregate_tags)
         models.first.update_attributes(:attr => "changed")
       end
+
+      it "should update if tags are removed" do
+        MyModel.should_receive(:aggregate_tags)
+        models.first.destroy
+      end
     end
   end
 
