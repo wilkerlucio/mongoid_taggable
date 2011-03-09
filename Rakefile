@@ -7,11 +7,11 @@ begin
   require 'jeweler'
   Jeweler::Tasks.new do |gemspec|
     gemspec.name = "mongoid_taggable"
-    gemspec.version = "0.1.3"
+    gemspec.version = "0.1.4"
     gemspec.summary = "Mongoid taggable behaviour"
     gemspec.description = "Mongoid Taggable provides some helpers to create taggable documents."
     gemspec.email = "wilkerlucio@gmail.com"
-    gemspec.homepage = "http://github.com/wilkerlucio/mongo_taggable"
+    gemspec.homepage = "http://github.com/wilkerlucio/mongoid_taggable"
     gemspec.authors = ["Wilker Lucio", "Kris Kowalik"]
   end
   Jeweler::GemcutterTasks.new
