@@ -34,6 +34,14 @@ class Editorial < Article
   self.tag_aggregation = true
 end
 
+class Template
+  include Mongoid::Document
+  include Mongoid::Taggable
+  include Mongoid::Timestamps
+
+  taggable :aggregation => true
+end
+
 describe Mongoid::Taggable do
   context "saving tags from plain text" do
     let(:model) { MyModel.new }
@@ -119,12 +127,12 @@ describe Mongoid::Taggable do
       end
 
       it "should update when tags are edited" do
-        MyModel.should_receive(:aggregate_tags!)
+        MyModel.should_receive(:aggregate_tags)
         models.first.update_attributes(:tags => 'changed')
       end
 
       it "should not update if tags are unchanged" do
-        MyModel.should_not_receive(:aggregate_tags!)
+        MyModel.should_not_receive(:aggregate_tags)
         models.first.update_attributes(:attr => "changed")
       end
     end
@@ -167,6 +175,13 @@ describe Mongoid::Taggable do
     it "can split with a different separator" do
       editorial.keywords = 'opinion politics'
       editorial.keywords.should == %w[opinion politics]
+    end
+  end
+
+  context "using taggable module along with other mongoid modules" do
+    it "should list all saved tags distinct and ordered with custom tag attribute" do
+      Template.create!(:tags => 'food, ant, bee')
+      Template.tags.should == %w[ant bee food]
     end
   end
 end

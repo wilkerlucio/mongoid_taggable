@@ -21,10 +21,10 @@ module Mongoid::Taggable
       :instance_writer => false
 
     delegate :convert_string_tags_to_array, :to => 'self.class'
+    delegate :aggregate_tags, :to => 'self.class'
 
-    set_callback :save, :after, :if => proc { should_update_tag_aggregation? } do |document|
-      document.class.aggregate_tags!
-    end
+    set_callback :create, :after, :aggregate_tags
+    set_callback :save,   :after, :aggregate_tags, :if => proc { previous_changes.include?(tags_field.to_s) }
   end
 
   module ClassMethods
@@ -92,11 +92,6 @@ module Mongoid::Taggable
       criteria.all_in(tags_field => _tags)
     end
 
-    # Predicate for whether or not map/reduce aggregation is enabled
-    def aggregate_tags?
-      !!tag_aggregation
-    end
-
     # Collection name for storing results of tag count aggregation
     def tags_aggregation_collection
       @tags_aggregation_collection ||= "#{collection_name}_tags_aggregation"
@@ -104,8 +99,8 @@ module Mongoid::Taggable
 
     # Execute map/reduce operation to aggregate tag counts for document
     # class
-    def aggregate_tags!
-      return unless aggregate_tags?
+    def aggregate_tags
+      return unless tag_aggregation
 
       map = "function() {
         if (!this.#{tags_field}) {
@@ -148,16 +143,4 @@ module Mongoid::Taggable
       alias_method_chain "#{name}=", :taggable
     end
   end
-
-  module InstanceMethods
-  private
-    # Guard for callback that executes tag count aggregation, checking
-    # the option is enabled and a document change modified tags.
-    def should_update_tag_aggregation?
-      self.class.aggregate_tags? &&                   # vvv was a new record
-        previous_changes.include?(tags_field.to_s) || previous_changes.blank?
-    end
-  end
-
 end
-
