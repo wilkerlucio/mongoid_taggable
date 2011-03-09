@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.platform = Gem::Platform::RUBY
 
   s.date        = '2010-07-26'
-  s.authors     = ['Wilker Lúcio', 'Kris Kowalik', 'Ches Martin']
+  s.authors     = ['Wilker Lúcio', 'Kris Kowalik', 'Ches Martin', 'Paulo Fagiani']
   s.email       = ['wilkerlucio@gmail.com']
   s.homepage    = 'http://github.com/wilkerlucio/mongo_taggable'
   s.summary     = 'Mongoid taggable behaviour'
