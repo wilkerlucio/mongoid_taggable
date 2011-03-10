@@ -62,6 +62,15 @@ describe Mongoid::Taggable do
     end
   end
 
+  context "saving tags from array of strings" do
+    let(:model) { MyModel.new }
+
+    it "should ignore blank strings in array" do
+      model.tags = ["some", "", "new", "", "tag"]
+      model.tags.should == %w[some new tag]
+    end
+  end
+
   context "with customized tag field name" do
     let(:article) { Article.new }
 
