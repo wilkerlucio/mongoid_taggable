@@ -130,7 +130,7 @@ module Mongoid::Taggable
     # Helper method to convert a String to an Array based on the
     # configured tag separator.
     def convert_string_tags_to_array(_tags)
-      (_tags).split(tags_separator).map(&:strip)
+      (_tags).split(tags_separator).map(&:strip).reject(&:blank?)
     end
 
     # Define modifier for the configured tag field name that overrides

@@ -55,6 +55,11 @@ describe Mongoid::Taggable do
       model.tags = "now ,  with, some spaces  , in places "
       model.tags.should == ["now", "with", "some spaces", "in places"]
     end
+
+    it "should not put empty tags in array" do
+      model.tags = "repetitive,, commas, shouldn't cause,,, empty tags"
+      model.tags.should == ["repetitive", "commas", "shouldn't cause", "empty tags"]
+    end
   end
 
   context "with customized tag field name" do
