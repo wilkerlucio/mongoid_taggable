@@ -69,6 +69,11 @@ describe Mongoid::Taggable do
       model.tags = ["some", "", "new", "", "tag"]
       model.tags.should == %w[some new tag]
     end
+
+    it "should split any string within the array" do
+      model.tags = ["favorite", "colors", "blue, green"]
+      model.tags.should == %w[favorite colors blue green]
+    end
   end
 
   context "with customized tag field name" do
