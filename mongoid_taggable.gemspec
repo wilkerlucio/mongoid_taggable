@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
   s.date        = '2010-07-26'
   s.authors     = ['Wilker Lúcio', 'Kris Kowalik', 'Ches Martin', 'Paulo Fagiani']
   s.email       = ['wilkerlucio@gmail.com']
-  s.homepage    = 'http://github.com/wilkerlucio/mongo_taggable'
+  s.homepage    = 'http://github.com/wilkerlucio/mongoid_taggable'
   s.summary     = 'Mongoid taggable behaviour'
   s.description = 'Mongoid Taggable provides some helpers to create taggable documents.'
 
