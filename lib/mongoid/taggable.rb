@@ -141,9 +141,7 @@ module Mongoid::Taggable
         when String
           values = convert_string_tags_to_array(values)
         when Array
-          values.dup.each do |value|
-            values = values - value.to_a | convert_string_tags_to_array(value)
-          end
+          values = values.inject([]) { |final, value| final.concat convert_string_tags_to_array(value) }
         end
         send("#{name}_without_taggable=", values.map(&:strip).reject(&:blank?))
       end
