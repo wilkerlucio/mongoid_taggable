@@ -32,15 +32,13 @@ module Mongoid::Taggable
   end
   
   module ClassMethods
-    # get an array with all defined tags for this model, this list returns
-    # an array of distinct ordered list of tags defined in all documents
-    # of this model
+    # returns an array of distinct ordered list of tags defined in all documents
     def tags
       db = Mongoid::Config.master
       db.collection(tags_index_collection).find.to_a.map{ |r| r["_id"] }
     end
 
-    # retrieve the list of tags with weight(count), this is usefull for
+    # retrieve the list of tags with weight (i.e. count), this is useful for
     # creating tag clouds
     def tags_with_weight
       db = Mongoid::Config.master

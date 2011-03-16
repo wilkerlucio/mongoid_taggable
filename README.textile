@@ -18,7 +18,7 @@ bc. script/plugin install git://github.com/wilkerlucio/mongoid_taggable.git
 
 h2. Basic Usage
 
-To make a document taggable you just need to include Mongoid::Taggable into your document:
+To make a document taggable you need to include @Mongoid::Taggable@ into your document:
 
 bc.. class Post
   include Mongoid::Document
@@ -28,7 +28,7 @@ bc.. class Post
   field :content
 end
 
-p. Them in your form:
+p. And in your form:
 
 bc.. <% form_for @post do |f| %>
   <p>
@@ -48,13 +48,13 @@ bc.. <% form_for @post do |f| %>
   </p>
 <% end %>
 
-p. In this case, the text fields for tags should receive the list of tags separated by comma (below in this document you will see how to change the separator)
+p. In this case, the text fields for tags should receive the list of tags separated by comma (See below for how to change the separator).
 
-p. Then your document will have the @tags@ and @tags_array@ getter and setter. The @tags@ you use as a plain string with tags separated by comma, and the @tags_array@ is an array with tags. These two properties are automatically synchronized.
+p. Then your document will have the @tags@ and @tags_array@ getter and setter. @tags@ is as a plain string with tags separated by comma, and @tags_array@ an array representation.
 
 h2. Tags Indexing
 
-This lib will automatically create an index of tags and their counts for you after saving the document, useful for getting a list of all tags used in documents of this collection or to create a tag cloud. See the following example to understand how to use it:
+This module will automatically create an index of tags and their counts for you after saving the document. This can be used for a tag cloud. See the following example to understand how to use it:
 
 bc.. Post.create!(:tags => "food,ant,bee")
 Post.create!(:tags => "juice,food,bee,zip")
