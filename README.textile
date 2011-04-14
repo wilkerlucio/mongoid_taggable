@@ -57,7 +57,7 @@ h2. Finding Objects by Tag
 p. Tagged models get a scope called @tagged_with@:
 
 bc.. MyModel.tagged_with('foo')
-  MyModel.published.tagged_with('foo')
+MyModel.published.tagged_with('foo').count
 
 h2. Tags Indexing
 
