@@ -17,22 +17,27 @@ module Mongoid::Taggable
     # create fields for tags and index it
     base.field :tags_array, :type => Array
     base.index [['tags_array', Mongo::ASCENDING]]
-    
+
     # add callback to save tags index
     base.after_save do |document|
       document.class.save_tags_index!
     end
-    
+
     # extend model
     base.extend         ClassMethods
     base.send :include, InstanceMethods
-    
+
     # enable indexing as default
     base.enable_tags_index!
   end
-  
+
   module ClassMethods
     # returns an array of distinct ordered list of tags defined in all documents
+
+    def tagged_with(tag)
+      self.any_in(:tags_array => [tag])
+    end
+
     def tags
       db = Mongoid::Config.master
       db.collection(tags_index_collection).find.to_a.map{ |r| r["_id"] }
