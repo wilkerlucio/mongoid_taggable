@@ -20,6 +20,14 @@ class MyModel
 end
 
 describe Mongoid::Taggable do
+
+  context "finding by tag" do
+    it "locates tagged objects" do
+      m = MyModel.create!(:tags => "interesting,stuff")
+      MyModel.tagged_with('interesting').include?(m).should be_true
+    end
+  end
+
   context "saving tags from plain text" do
     before :each do
       @m = MyModel.new
@@ -75,7 +83,7 @@ describe Mongoid::Taggable do
       MyModel.tags_index_collection.should == "my_models_tags_index"
     end
 
-    context "retriving index" do
+    context "retrieving index" do
       before :each do
         MyModel.create!(:tags => "food,ant,bee")
         MyModel.create!(:tags => "juice,food,bee,zip")
