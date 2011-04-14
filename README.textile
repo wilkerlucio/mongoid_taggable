@@ -23,7 +23,7 @@ To make a document taggable you need to include @Mongoid::Taggable@ into your do
 bc.. class Post
   include Mongoid::Document
   include Mongoid::Taggable
-  
+
   field :title
   field :content
 end
@@ -51,6 +51,14 @@ bc.. <% form_for @post do |f| %>
 p. In this case, the text fields for tags should receive the list of tags separated by comma (See below for how to change the separator).
 
 p. Then your document will have the @tags@ and @tags_array@ getter and setter. @tags@ is as a plain string with tags separated by comma, and @tags_array@ an array representation.
+
+h2. Finding Objects by Tag
+
+p. Tagged models get a scope called @tagged_with@:
+
+bc..
+  MyModel.tagged_with('foo')
+  MyModel.published.tagged_with('foo')
 
 h2. Tags Indexing
 
