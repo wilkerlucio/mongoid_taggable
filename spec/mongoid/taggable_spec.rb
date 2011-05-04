@@ -21,10 +21,49 @@ end
 
 describe Mongoid::Taggable do
 
-  context "finding by tag" do
-    it "locates tagged objects" do
-      m = MyModel.create!(:tags => "interesting,stuff")
-      MyModel.tagged_with('interesting').include?(m).should be_true
+  context "finding" do
+    let(:model){MyModel.create!(:tags => "interesting,stuff,good,bad")}
+    context "by tagged_with" do
+      let(:models){MyModel.tagged_with('interesting')}
+      it "locates tagged objects" do
+        models.include?(model).should be_true
+      end
+    end
+    context "by tagged_with_all using an array" do
+      let(:models){MyModel.tagged_with_all(['interesting', 'good'])}
+      it "locates tagged objects" do
+        models.include?(model).should be_true
+      end
+    end
+    context "by tagged_with_all using strings" do
+      let(:models){MyModel.tagged_with_all('interesting', 'good')}
+      it "locates tagged objects" do
+        models.include?(model).should be_true
+      end
+    end
+    context "by tagged_with_all when tag not included" do
+      let(:models){MyModel.tagged_with_all('interesting', 'good', 'mcdonalds')}
+      it "locates tagged objects" do
+        models.include?(model).should be_false
+      end
+    end
+    context "by tagged_with_any using an array" do
+      let(:models){MyModel.tagged_with_any(['interesting', 'mcdonalds'])}
+      it "locates tagged objects" do
+        models.include?(model).should be_true
+      end
+    end
+    context "by tagged_with_any using strings" do
+      let(:models){MyModel.tagged_with_any('interesting', 'mcdonalds')}
+      it "locates tagged objects" do
+        models.include?(model).should be_true
+      end
+    end
+    context "by tagged_with_any when tag not included" do
+      let(:models){MyModel.tagged_with_any('hardees', 'wendys', 'mcdonalds')}
+      it "locates tagged objects" do
+        models.include?(model).should be_false
+      end
     end
   end
 
