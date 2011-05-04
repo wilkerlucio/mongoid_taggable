@@ -54,10 +54,14 @@ p. Then your document will have the @tags@ and @tags_array@ getter and setter. @
 
 h2. Finding Objects by Tag
 
-p. Tagged models get a scope called @tagged_with@:
+p. Tagged models get a scope called @tagged_with@, @tagged_with_all@, and @tagged_with_any@:
 
 bc.. MyModel.tagged_with('foo')
 MyModel.published.tagged_with('foo').count
+MyModel.tagged_with_all('foo', 'bar')
+MyModel.tagged_with_all(['foo', 'bar'])
+MyModel.tagged_with_any('foo', 'bar')
+MyModel.tagged_with_any(['foo', 'bar'])
 
 h2. Tags Indexing
 
