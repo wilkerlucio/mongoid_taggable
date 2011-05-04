@@ -38,6 +38,14 @@ module Mongoid::Taggable
       self.any_in(:tags_array => [tag])
     end
 
+    def tagged_with_all(*tags)
+      self.all_in(:tags_array => tags.flatten)
+    end
+    
+    def tagged_with_any(*tags)
+      self.any_in(:tags_array => tags.flatten)
+    end
+
     def tags
       db = Mongoid::Config.master
       db.collection(tags_index_collection).find.to_a.map{ |r| r["_id"] }
