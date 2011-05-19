@@ -21,6 +21,12 @@ end
 
 describe Mongoid::Taggable do
 
+  describe "default tags array value" do
+    it 'should be an empty array' do
+      MyModel.new.tags_array.should == []
+    end
+  end
+
   context "finding" do
     let(:model){MyModel.create!(:tags => "interesting,stuff,good,bad")}
     context "by tagged_with" do

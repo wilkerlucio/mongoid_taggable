@@ -15,7 +15,7 @@
 module Mongoid::Taggable
   def self.included(base)
     # create fields for tags and index it
-    base.field :tags_array, :type => Array
+    base.field :tags_array, :type => Array, :default => []
     base.index [['tags_array', Mongo::ASCENDING]]
 
     # add callback to save tags index
