@@ -20,12 +20,16 @@ module Mongoid::Taggable
 
     # add callback to save tags index
     base.after_save do |document|
-      document.class.save_tags_index!
+      if document.tags_array_changed
+        document.class.save_tags_index!
+        document.tags_array_changed = false
+      end
     end
 
     # extend model
     base.extend         ClassMethods
     base.send :include, InstanceMethods
+    base.send :attr_accessor, :tags_array_changed
 
     # enable indexing as default
     base.enable_tags_index!
@@ -41,7 +45,7 @@ module Mongoid::Taggable
     def tagged_with_all(*tags)
       self.all_in(:tags_array => tags.flatten)
     end
-    
+
     def tagged_with_any(*tags)
       self.any_in(:tags_array => tags.flatten)
     end
@@ -78,8 +82,6 @@ module Mongoid::Taggable
     def save_tags_index!
       return unless @do_tags_index
 
-      db = Mongoid::Config.master
-      coll = db.collection(collection_name)
 
       map = "function() {
         if (!this.tags_array) {
@@ -101,17 +103,20 @@ module Mongoid::Taggable
         return count;
       }"
 
-      coll.map_reduce(map, reduce, :out => tags_index_collection)
+     self.collection.master.map_reduce(map, reduce,
+                                :out => tags_index_collection)
     end
   end
 
   module InstanceMethods
+
     def tags
       (tags_array || []).join(self.class.tags_separator)
     end
 
     def tags=(tags)
       self.tags_array = tags.split(self.class.tags_separator).map(&:strip).reject(&:blank?)
+      @tags_array_changed = true
     end
   end
 end

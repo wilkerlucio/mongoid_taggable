@@ -17,6 +17,7 @@ require File.join(File.dirname(__FILE__), %w[.. spec_helper])
 class MyModel
   include Mongoid::Document
   include Mongoid::Taggable
+  field :name
 end
 
 describe Mongoid::Taggable do
@@ -166,5 +167,22 @@ describe Mongoid::Taggable do
         MyModel.tags.should == []
       end
     end
+
+    it 'should launch the map/reduce if index activate and tag_arrays change' do
+      m = MyModel.create!(:tags => "food,ant,bee")
+      m.tags = 'juice,food'
+      MyModel.collection.master.should_receive(:map_reduce)
+      m.save
+    end
+
+    it 'should not launch the map/reduce if index activate and tag_arrays not change' do
+      m = MyModel.create!(:tags => "food,ant,bee")
+      MyModel.collection.master.should_not_receive(:map_reduce)
+      m.save
+      m.name = 'hello'
+      m.save
+    end
+
   end
+
 end
