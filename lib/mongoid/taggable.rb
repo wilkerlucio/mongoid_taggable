@@ -51,15 +51,13 @@ module Mongoid::Taggable
     end
 
     def tags
-      db = Mongoid::Config.master
-      db.collection(tags_index_collection).find.to_a.map{ |r| r["_id"] }
+      tags_index_collection.master.find.to_a.map{ |r| r["_id"] }
     end
 
     # retrieve the list of tags with weight (i.e. count), this is useful for
     # creating tag clouds
     def tags_with_weight
-      db = Mongoid::Config.master
-      db.collection(tags_index_collection).find.to_a.map{ |r| [r["_id"], r["value"]] }
+      tags_index_collection.master.find.to_a.map{ |r| [r["_id"], r["value"]] }
     end
 
     def disable_tags_index!
@@ -75,13 +73,16 @@ module Mongoid::Taggable
       @tags_separator || ','
     end
 
-    def tags_index_collection
+    def tags_index_collection_name
       "#{collection_name}_tags_index"
+    end
+
+    def tags_index_collection
+      @@tags_index_collection ||= Mongoid::Collection.new(self, tags_index_collection_name)
     end
 
     def save_tags_index!
       return unless @do_tags_index
-
 
       map = "function() {
         if (!this.tags_array) {
@@ -103,13 +104,11 @@ module Mongoid::Taggable
         return count;
       }"
 
-     self.collection.master.map_reduce(map, reduce,
-                                :out => tags_index_collection)
+     self.collection.master.map_reduce(map, reduce, :out => tags_index_collection_name)
     end
   end
 
   module InstanceMethods
-
     def tags
       (tags_array || []).join(self.class.tags_separator)
     end
