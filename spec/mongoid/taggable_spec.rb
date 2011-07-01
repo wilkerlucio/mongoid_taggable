@@ -125,7 +125,15 @@ describe Mongoid::Taggable do
 
   context "indexing tags" do
     it "should generate the index collection name based on model" do
-      MyModel.tags_index_collection.should == "my_models_tags_index"
+      MyModel.tags_index_collection_name.should == "my_models_tags_index"
+    end
+
+    it "should generate the index collection model based on model" do
+      MyModel.tags_index_collection.should be_a Mongoid::Collection
+    end
+
+    it "should generate the index collection model based on model with the collection name" do
+      MyModel.tags_index_collection.name.should == "my_models_tags_index"
     end
 
     context "retrieving index" do
