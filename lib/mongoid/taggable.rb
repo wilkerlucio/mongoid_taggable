@@ -60,6 +60,10 @@ module Mongoid::Taggable
       tags_index_collection.master.find.to_a.map{ |r| [r["_id"], r["value"]] }
     end
 
+    def tags_autocomplete(criteria)
+      tags_index_collection.master.find({:_id => /^#{criteria}/}).to_a.map{ |r| [r["_id"], r["value"]] }
+    end
+
     def disable_tags_index!
       @do_tags_index = false
     end
