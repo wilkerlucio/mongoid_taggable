@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Mongoid Taggable : Mongoid taggable behaviour" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Mongoid Taggable</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/wilkerlucio/mongoid_taggable">Fork Me on GitHub</a>
+
+          <h1 id="project_title">Mongoid Taggable</h1>
+          <h2 id="project_tagline">Mongoid taggable behaviour</h2>
+
+          <section id="downloads">
+            <a class="zip_download_link" href="https://github.com/wilkerlucio/mongoid_taggable/zipball/master">Download this project as a .zip file</a>
+            <a class="tar_download_link" href="https://github.com/wilkerlucio/mongoid_taggable/tarball/master">Download this project as a tar.gz file</a>
+          </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <p>Mongoid Taggable provides some helpers to create taggable documents.</p>
+
+<h3>Installation</h3>
+
+<p>You can simple install from rubygems:</p>
+
+<pre><code>gem install mongoid_taggable
+</code></pre>
+
+<p>or in Gemfile:</p>
+
+<div class="highlight">
+<pre><span class="n">gem</span> <span class="s1">'mongoid_taggable'</span>
+</pre>
+</div>
+
+
+<p>or as a Rails Plugin:</p>
+
+<pre><code>script/plugin install git://github.com/wilkerlucio/mongoid_taggable.git
+</code></pre>
+
+<h3>Basic Usage</h3>
+
+<p>To make a document taggable you need to include <code>Mongoid::Taggable</code> into your document:</p>
+
+<div class="highlight">
+<pre><span class="k">class</span> <span class="nc">Post</span>
+  <span class="kp">include</span> <span class="no">Mongoid</span><span class="o">::</span><span class="no">Document</span>
+  <span class="kp">include</span> <span class="no">Mongoid</span><span class="o">::</span><span class="no">Taggable</span>
+
+  <span class="n">field</span> <span class="ss">:title</span>
+  <span class="n">field</span> <span class="ss">:content</span>
+<span class="k">end</span>
+</pre>
+</div>
+
+
+<p>And in your form:</p>
+
+<div class="highlight">
+<pre><span class="cp">&lt;%</span> <span class="n">form_for</span> <span class="vi">@post</span> <span class="k">do</span> <span class="o">|</span><span class="n">f</span><span class="o">|</span> <span class="cp">%&gt;</span><span class="x"></span>
+<span class="x">  &lt;p&gt;</span>
+<span class="x">    </span><span class="cp">&lt;%=</span> <span class="n">f</span><span class="o">.</span><span class="n">label</span> <span class="ss">:title</span> <span class="cp">%&gt;</span><span class="x">&lt;br /&gt;</span>
+<span class="x">    </span><span class="cp">&lt;%=</span> <span class="n">f</span><span class="o">.</span><span class="n">text_field</span> <span class="ss">:title</span> <span class="cp">%&gt;</span><span class="x"></span>
+<span class="x">  &lt;/p&gt;</span>
+<span class="x">  &lt;p&gt;</span>
+<span class="x">    </span><span class="cp">&lt;%=</span> <span class="n">f</span><span class="o">.</span><span class="n">label</span> <span class="ss">:content</span> <span class="cp">%&gt;</span><span class="x">&lt;br /&gt;</span>
+<span class="x">    </span><span class="cp">&lt;%=</span> <span class="n">f</span><span class="o">.</span><span class="n">text_area</span> <span class="ss">:content</span> <span class="cp">%&gt;</span><span class="x"></span>
+<span class="x">  &lt;/p&gt;</span>
+<span class="x">  &lt;p&gt;</span>
+<span class="x">    </span><span class="cp">&lt;%=</span> <span class="n">f</span><span class="o">.</span><span class="n">label</span> <span class="ss">:tags</span> <span class="cp">%&gt;</span><span class="x">&lt;br /&gt;</span>
+<span class="x">    </span><span class="cp">&lt;%=</span> <span class="n">f</span><span class="o">.</span><span class="n">text_field</span> <span class="ss">:tags</span> <span class="cp">%&gt;</span><span class="x"></span>
+<span class="x">  &lt;/p&gt;</span>
+<span class="x">  &lt;p&gt;</span>
+<span class="x">    &lt;button type="submit"&gt;Send&lt;/button&gt;</span>
+<span class="x">  &lt;/p&gt;</span>
+<span class="cp">&lt;%</span> <span class="k">end</span> <span class="cp">%&gt;</span><span class="x"></span>
+</pre>
+</div>
+
+
+<p>In this case, the text fields for tags should receive the list of tags separated by comma (See below for how to change the separator).</p>
+
+<p>Then your document will have the <code>tags</code> and <code>tags_array</code> getter and setter. <code>tags</code> is as a plain string with tags separated by comma, and <code>tags_array</code> an array representation.</p>
+
+<h3>Finding Objects by Tag</h3>
+
+<p>Tagged models get a scope called <code>tagged_with</code>, <code>tagged_with_all</code>, and <code>tagged_with_any</code>:</p>
+
+<div class="highlight">
+<pre><span class="no">MyModel</span><span class="o">.</span><span class="n">tagged_with</span><span class="p">(</span><span class="s1">'foo'</span><span class="p">)</span>
+<span class="no">MyModel</span><span class="o">.</span><span class="n">published</span><span class="o">.</span><span class="n">tagged_with</span><span class="p">(</span><span class="s1">'foo'</span><span class="p">)</span><span class="o">.</span><span class="n">count</span>
+<span class="no">MyModel</span><span class="o">.</span><span class="n">tagged_with_all</span><span class="p">(</span><span class="s1">'foo'</span><span class="p">,</span> <span class="s1">'bar'</span><span class="p">)</span>
+<span class="no">MyModel</span><span class="o">.</span><span class="n">tagged_with_all</span><span class="p">(</span><span class="o">[</span><span class="s1">'foo'</span><span class="p">,</span> <span class="s1">'bar'</span><span class="o">]</span><span class="p">)</span>
+<span class="no">MyModel</span><span class="o">.</span><span class="n">tagged_with_any</span><span class="p">(</span><span class="s1">'foo'</span><span class="p">,</span> <span class="s1">'bar'</span><span class="p">)</span>
+<span class="no">MyModel</span><span class="o">.</span><span class="n">tagged_with_any</span><span class="p">(</span><span class="o">[</span><span class="s1">'foo'</span><span class="p">,</span> <span class="s1">'bar'</span><span class="o">]</span><span class="p">)</span>
+</pre>
+</div>
+
+
+<h3>Tags Indexing</h3>
+
+<p>This module will automatically create an index of tags and their counts for you after saving the document. This can be used for a tag cloud. See the following example to understand how to use it:</p>
+
+<div class="highlight">
+<pre><span class="no">Post</span><span class="o">.</span><span class="n">create!</span><span class="p">(</span><span class="ss">:tags</span> <span class="o">=&gt;</span> <span class="s2">"food,ant,bee"</span><span class="p">)</span>
+<span class="no">Post</span><span class="o">.</span><span class="n">create!</span><span class="p">(</span><span class="ss">:tags</span> <span class="o">=&gt;</span> <span class="s2">"juice,food,bee,zip"</span><span class="p">)</span>
+<span class="no">Post</span><span class="o">.</span><span class="n">create!</span><span class="p">(</span><span class="ss">:tags</span> <span class="o">=&gt;</span> <span class="s2">"honey,strip,food"</span><span class="p">)</span>
+
+<span class="no">Post</span><span class="o">.</span><span class="n">tags</span> <span class="c1"># will retrieve ["ant", "bee", "food", "honey", "juice", "strip", "zip"]</span>
+<span class="no">Post</span><span class="o">.</span><span class="n">tags_with_weight</span> <span class="c1"># will retrieve:</span>
+<span class="c1"># [</span>
+<span class="c1">#   ['ant', 1],</span>
+<span class="c1">#   ['bee', 2],</span>
+<span class="c1">#   ['food', 3],</span>
+<span class="c1">#   ['honey', 1],</span>
+<span class="c1">#   ['juice', 1],</span>
+<span class="c1">#   ['strip', 1],</span>
+<span class="c1">#   ['zip', 1]</span>
+<span class="c1"># ]</span>
+</pre>
+</div>
+
+
+<p>If you don't want to use this feature, it is good to disable it to improve performance:</p>
+
+<div class="highlight">
+<pre><span class="k">class</span> <span class="nc">Post</span>
+  <span class="kp">include</span> <span class="no">Mongoid</span><span class="o">::</span><span class="no">Document</span>
+  <span class="kp">include</span> <span class="no">Mongoid</span><span class="o">::</span><span class="no">Taggable</span>
+
+  <span class="n">disable_tags_index!</span> <span class="c1"># will disable index creation</span>
+
+  <span class="n">field</span> <span class="ss">:title</span>
+  <span class="n">field</span> <span class="ss">:content</span>
+<span class="k">end</span>
+</pre>
+</div>
+
+
+<h3>Changing default separator</h3>
+
+<p>To change the default separator you may call the <code>tags_separator</code> class method:</p>
+
+<div class="highlight">
+<pre><span class="k">class</span> <span class="nc">Post</span>
+  <span class="kp">include</span> <span class="no">Mongoid</span><span class="o">::</span><span class="no">Document</span>
+  <span class="kp">include</span> <span class="no">Mongoid</span><span class="o">::</span><span class="no">Taggable</span>
+
+  <span class="n">tags_separator</span> <span class="s1">';'</span> <span class="c1"># will change tags separator to ;</span>
+
+  <span class="n">field</span> <span class="ss">:title</span>
+  <span class="n">field</span> <span class="ss">:content</span>
+<span class="k">end</span>
+</pre>
+</div>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Mongoid Taggable maintained by <a href="https://github.com/wilkerlucio">wilkerlucio</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
