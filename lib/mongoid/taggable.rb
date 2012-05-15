@@ -54,10 +54,18 @@ module Mongoid::Taggable
       tags_index_collection.master.find.to_a.map{ |r| r["_id"] }
     end
 
+    def destroy_tags!
+      tags_index_collection.master.remove({})
+    end
+
     # retrieve the list of tags with weight (i.e. count), this is useful for
     # creating tag clouds
-    def tags_with_weight
-      tags_index_collection.master.find.to_a.map{ |r| [r["_id"], r["value"]] }
+    def tags_with_weight(max = 10)
+      tags_index_collection.master.find.limit(max).to_a.map{ |r| [r["_id"], r["value"]] }
+    end
+
+    def tags_autocomplete(criteria)
+      tags_index_collection.master.find({:_id => /^#{criteria}/}).to_a.map{ |r| [r["_id"], r["value"]] }
     end
 
     def disable_tags_index!
