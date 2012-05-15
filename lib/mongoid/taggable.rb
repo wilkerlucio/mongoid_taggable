@@ -55,7 +55,7 @@ module Mongoid::Taggable
     end
 
     def destroy_tags!
-      tags_index_collection.master.all.delete
+      tags_index_collection.master.remove({})
     end
 
     # retrieve the list of tags with weight (i.e. count), this is useful for
