@@ -16,7 +16,7 @@ module Mongoid::Taggable
   def self.included(base)
     # create fields for tags and index it
     base.field :tags_array, :type => Array, :default => []
-    base.index [['tags_array', Mongo::ASCENDING]]
+    base.index({tags_array: 1}, {drop_dups: true})
 
     # add callback to save tags index
     base.after_save do |document|
@@ -104,7 +104,7 @@ module Mongoid::Taggable
         return count;
       }"
 
-     self.collection.master.map_reduce(map, reduce, :out => tags_index_collection_name)
+     self.map_reduce(map, reduce).out(merge: tags_index_collection_name)
     end
   end
 
