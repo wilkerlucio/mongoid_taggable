@@ -78,7 +78,7 @@ module Mongoid::Taggable
     end
 
     def tags_index_collection
-      @@tags_index_collection ||= Mongoid::Collection.new(self, tags_index_collection_name)
+      @@tags_index_collection ||= Mongoid::Collections::Master.new(self, tags_index_collection_name)
     end
 
     def save_tags_index!
