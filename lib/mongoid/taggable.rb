@@ -104,7 +104,7 @@ module Mongoid::Taggable
         return count;
       }"
 
-     self.collection.master.map_reduce(map, reduce, :out => tags_index_collection_name)
+     self.master.collection.map_reduce(map, reduce, :out => tags_index_collection_name)
     end
   end
 
