@@ -104,7 +104,7 @@ module Mongoid::Taggable
         return count;
       }"
 
-     self.map_reduce(map, reduce).out(replace: "tags_index_collection_name")
+      self.map_reduce(map, reduce).out(replace: tags_index_collection_name).time
     end
   end
 
