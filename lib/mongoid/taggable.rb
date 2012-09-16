@@ -57,7 +57,7 @@ module Mongoid::Taggable
     # retrieve the list of tags with weight (i.e. count), this is useful for
     # creating tag clouds
     def tags_with_weight
-      tags_index_collection.find.to_a.map{ |r| [r["_id"], r["value"]] }
+      tags_index_collection.find.to_a.map{ |r| [r["_id"], r["value"].to_i] }
     end
 
     def disable_tags_index!
