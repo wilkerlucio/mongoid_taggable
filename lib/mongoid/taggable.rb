@@ -16,7 +16,7 @@ module Mongoid::Taggable
   def self.included(base)
     # create fields for tags and index it
     base.field :tags_array, :type => Array, :default => []
-    base.index [['tags_array', Mongo::ASCENDING]]
+    base.index 'tags_array' => 1 #[['tags_array', Mongo::ASCENDING]]
 
     # add callback to save tags index
     base.after_save do |document|
@@ -51,13 +51,13 @@ module Mongoid::Taggable
     end
 
     def tags
-      tags_index_collection.master.find.to_a.map{ |r| r["_id"] }
+      tags_index_collection.find.to_a.map{ |r| r["_id"] }
     end
 
     # retrieve the list of tags with weight (i.e. count), this is useful for
     # creating tag clouds
     def tags_with_weight
-      tags_index_collection.master.find.to_a.map{ |r| [r["_id"], r["value"]] }
+      tags_index_collection.find.to_a.map{ |r| [r["_id"], r["value"]] }
     end
 
     def disable_tags_index!
@@ -78,7 +78,7 @@ module Mongoid::Taggable
     end
 
     def tags_index_collection
-      @@tags_index_collection ||= Mongoid::Collection.new(self, tags_index_collection_name)
+      @@tags_index_collection ||= Moped::Collection.new(self.collection.database, tags_index_collection_name)
     end
 
     def save_tags_index!
@@ -104,7 +104,7 @@ module Mongoid::Taggable
         return count;
       }"
 
-     self.collection.master.map_reduce(map, reduce, :out => tags_index_collection_name)
+     self.map_reduce(map, reduce).out(replace: "tags_index_collection_name")
     end
   end
 
