@@ -104,7 +104,9 @@ module Mongoid::Taggable
         return count;
       }"
 
-     self.map_reduce(map, reduce).out(replace: "tags_index_collection_name")
+     # Since map_reduce is normally lazy-loaded, call and return "time" to
+     # force execution
+     self.map_reduce(map, reduce).out(replace: tags_index_collection_name).time
     end
   end
 
