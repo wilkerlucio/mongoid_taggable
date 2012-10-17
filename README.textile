@@ -83,6 +83,7 @@ Post.tags_with_weight # will retrieve:
 #   ['zip', 1]
 # ]
 
+p. The tags index is unaffected by default_scopes. If enabled, all tags will be indexed regardless of other attribute values.
 p. If you don't want to use this feature, it is good to disable it to improve performance:
 
 bc.. class Post

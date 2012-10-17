@@ -105,7 +105,9 @@ module Mongoid::Taggable
       }"
 
       # Since map_reduce is normally lazy-executed, call 'raw'
-      self.map_reduce(map, reduce).out(replace: tags_index_collection_name).raw
+      # Should not be influenced by scoping. Let consumers worry about
+      # removing tags they wish not to appear in index.
+      self.unscoped.map_reduce(map, reduce).out(replace: tags_index_collection_name).raw
     end
   end
 
