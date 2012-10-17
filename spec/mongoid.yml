@@ -1,0 +1,6 @@
+test:
+  sessions:
+    default:
+      database: mongoid_taggable_test
+      hosts:
+        - localhost:27017

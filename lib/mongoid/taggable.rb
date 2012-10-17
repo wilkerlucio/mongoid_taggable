@@ -16,7 +16,7 @@ module Mongoid::Taggable
   def self.included(base)
     # create fields for tags and index it
     base.field :tags_array, :type => Array, :default => []
-    base.index 'tags_array' => 1 #[['tags_array', Mongo::ASCENDING]]
+    base.index tags_array: 1 #[['tags_array', Mongo::ASCENDING]]
 
     # add callback to save tags index
     base.after_save do |document|
@@ -104,9 +104,8 @@ module Mongoid::Taggable
         return count;
       }"
 
-     # Since map_reduce is normally lazy-loaded, call and return "time" to
-     # force execution
-     self.map_reduce(map, reduce).out(replace: tags_index_collection_name).time
+      # Since map_reduce is normally lazy-executed, call 'raw'
+      self.map_reduce(map, reduce).out(replace: tags_index_collection_name).raw
     end
   end
 
@@ -116,7 +115,11 @@ module Mongoid::Taggable
     end
 
     def tags=(tags)
-      self.tags_array = tags.split(self.class.tags_separator).map(&:strip).reject(&:blank?)
+      if tags.present?
+        self.tags_array = tags.split(self.class.tags_separator).map(&:strip).reject(&:blank?)
+      else
+       self.tags_array = []
+      end
       @tags_array_changed = true
     end
   end
