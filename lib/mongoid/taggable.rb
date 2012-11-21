@@ -13,13 +13,15 @@
 # limitations under the License.
 
 module Mongoid::Taggable
-  def self.included(base)
+  extend ActiveSupport::Concern
+
+  included do
     # create fields for tags and index it
-    base.field :tags_array, :type => Array, :default => []
-    base.index tags_array: 1 #[['tags_array', Mongo::ASCENDING]]
+    field :tags_array, :type => Array, :default => []
+    index({ tags_array: 1 })
 
     # add callback to save tags index
-    base.after_save do |document|
+    after_save do |document|
       if document.tags_array_changed
         document.class.save_tags_index!
         document.tags_array_changed = false
@@ -27,12 +29,10 @@ module Mongoid::Taggable
     end
 
     # extend model
-    base.extend         ClassMethods
-    base.send :include, InstanceMethods
-    base.send :attr_accessor, :tags_array_changed
+    attr_accessor :tags_array_changed
 
     # enable indexing as default
-    base.enable_tags_index!
+    enable_tags_index!
   end
 
   module ClassMethods
@@ -111,22 +111,21 @@ module Mongoid::Taggable
     end
   end
 
-  module InstanceMethods
-    def tags
-      (tags_array || []).join(self.class.tags_separator)
-    end
 
-    def tags=(tags)
-      if tags.present?
-        self.tags_array = tags.split(self.class.tags_separator).map(&:strip).reject(&:blank?)
-      else
-       self.tags_array = []
-      end
-      @tags_array_changed = true
-    end
+  def tags
+    (tags_array || []).join(self.class.tags_separator)
+  end
 
-    def save_tags_index!
-      self.class.save_tags_index!
+  def tags=(tags)
+    if tags.present?
+      self.tags_array = tags.split(self.class.tags_separator).map(&:strip).reject(&:blank?)
+    else
+     self.tags_array = []
     end
+    @tags_array_changed = true
+  end
+
+  def save_tags_index!
+    self.class.save_tags_index!
   end
 end
