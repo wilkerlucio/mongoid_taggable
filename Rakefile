@@ -1,7 +1,13 @@
+require 'bundler'
+begin
+  Bundler.setup(:default, :development)
+rescue Bundler::BundlerError => e
+  $stderr.puts e.message
+  $stderr.puts "Run `bundle install` to install missing gems"
+  exit e.status_code
+end
 require 'rake'
-require 'rake/rdoctask'
-require 'rspec'
-require 'rspec/core/rake_task'
+require 'rdoc/task'
 
 begin
   require 'jeweler'
@@ -12,7 +18,7 @@ begin
     gemspec.description = "Mongoid Taggable provides some helpers to create taggable documents."
     gemspec.email = "wilkerlucio@gmail.com"
     gemspec.homepage = "http://github.com/wilkerlucio/mongoid_taggable"
-    gemspec.authors = ["Wilker Lucio", "Kris Kowalik"]
+    gemspec.authors = ["Wilker Lucio", "Kris Kowalik", 'Vladimir Krylov']
   end
   Jeweler::GemcutterTasks.new
 rescue LoadError
@@ -20,12 +26,12 @@ rescue LoadError
 end
 
 
-desc 'Default: run unit tests.'
-task :default => :spec
+require 'rspec'
+require 'rspec/core/rake_task'
+desc "Run specs"
+RSpec::Core::RakeTask.new :spec
 
-Rspec::Core::RakeTask.new(:spec) do |spec|
-  spec.pattern = "spec/**/*_spec.rb"
-end
+task :default => :spec
 
 desc 'Generate documentation for the mongoid_taggable plugin.'
 Rake::RDocTask.new(:rdoc) do |rdoc|
