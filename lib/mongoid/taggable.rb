@@ -22,7 +22,7 @@ module Mongoid::Taggable
 
     # add callback to save tags index
     after_save do |document|
-      document.class.save_tags_index! if document.tags_array_changed?
+      document.save_tags_index! if document.tags_array_changed?
     end
 
     # enable indexing as default
@@ -101,6 +101,9 @@ module Mongoid::Taggable
     end
   end
 
+  def save_tags_index!
+    self.class.save_tags_index!
+  end
 
   def tags
     (tags_array || []).join(self.class.tags_separator)
