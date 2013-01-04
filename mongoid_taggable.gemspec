@@ -17,6 +17,8 @@ Gem::Specification.new do |s|
     "README.textile"
   ]
   s.files = [
+    "Gemfile",
+    "Gemfile.lock",
     "LICENSE",
     "README.textile",
     "Rakefile",

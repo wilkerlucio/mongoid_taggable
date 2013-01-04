@@ -130,7 +130,7 @@ describe Mongoid::Taggable do
     end
 
     it "should generate the index collection model based on model" do
-      MyModel.tags_index_collection.should be_a Mongoid::Collection
+      MyModel.tags_index_collection.should be_a Moped::Collection
     end
 
     it "should generate the index collection model based on model with the collection name" do
@@ -177,15 +177,15 @@ describe Mongoid::Taggable do
     end
 
     it 'should launch the map/reduce if index activate and tag_arrays change' do
-      m = MyModel.create!(:tags => "food,ant,bee")
+      m = MyModel.create!(:tags_ => %w("food ant bee"))
       m.tags = 'juice,food'
-      MyModel.collection.master.should_receive(:map_reduce)
+      m.should_receive(:save_tags_index!)
       m.save
     end
 
     it 'should not launch the map/reduce if index activate and tag_arrays not change' do
       m = MyModel.create!(:tags => "food,ant,bee")
-      MyModel.collection.master.should_not_receive(:map_reduce)
+      m.should_not_receive(:save_tags_index!)
       m.save
       m.name = 'hello'
       m.save
