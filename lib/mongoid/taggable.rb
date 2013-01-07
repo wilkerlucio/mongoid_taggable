@@ -13,26 +13,20 @@
 # limitations under the License.
 
 module Mongoid::Taggable
-  def self.included(base)
+  extend ActiveSupport::Concern
+
+  included do
     # create fields for tags and index it
-    base.field :tags_array, :type => Array, :default => []
-    base.index [['tags_array', Mongo::ASCENDING]]
+    field :tags_array, :type => Array, :default => []
+    index({ tags_array: 1 })
 
     # add callback to save tags index
-    base.after_save do |document|
-      if document.tags_array_changed
-        document.class.save_tags_index!
-        document.tags_array_changed = false
-      end
+    after_save do |document|
+      document.save_tags_index! if document.tags_array_changed?
     end
 
-    # extend model
-    base.extend         ClassMethods
-    base.send :include, InstanceMethods
-    base.send :attr_accessor, :tags_array_changed
-
     # enable indexing as default
-    base.enable_tags_index!
+    enable_tags_index!
   end
 
   module ClassMethods
@@ -51,13 +45,13 @@ module Mongoid::Taggable
     end
 
     def tags
-      tags_index_collection.master.find.to_a.map{ |r| r["_id"] }
+      tags_index_collection.find.to_a.map{ |r| r["_id"] }
     end
 
     # retrieve the list of tags with weight (i.e. count), this is useful for
     # creating tag clouds
     def tags_with_weight
-      tags_index_collection.master.find.to_a.map{ |r| [r["_id"], r["value"]] }
+      tags_index_collection.find.to_a.map{ |r| [r["_id"], r["value"]] }
     end
 
     def disable_tags_index!
@@ -78,7 +72,7 @@ module Mongoid::Taggable
     end
 
     def tags_index_collection
-      @@tags_index_collection ||= Mongoid::Collection.new(self, tags_index_collection_name)
+      @@tags_index_collection ||= Moped::Collection.new(self.collection.database, tags_index_collection_name)
     end
 
     def save_tags_index!
@@ -103,19 +97,19 @@ module Mongoid::Taggable
 
         return count;
       }"
-
-     self.collection.master.map_reduce(map, reduce, :out => tags_index_collection_name)
+      self.map_reduce(map, reduce).out(replace: tags_index_collection_name).count
     end
   end
 
-  module InstanceMethods
-    def tags
-      (tags_array || []).join(self.class.tags_separator)
-    end
+  def save_tags_index!
+    self.class.save_tags_index!
+  end
 
-    def tags=(tags)
-      self.tags_array = tags.split(self.class.tags_separator).map(&:strip).reject(&:blank?)
-      @tags_array_changed = true
-    end
+  def tags
+    (tags_array || []).join(self.class.tags_separator)
+  end
+
+  def tags=(tags)
+    self.tags_array = tags.split(self.class.tags_separator).map(&:strip).reject(&:blank?)
   end
 end
