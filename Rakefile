@@ -1,4 +1,5 @@
 require 'bundler'
+require 'bundler/gem_tasks'
 begin
   Bundler.setup(:default, :test)
 rescue Bundler::BundlerError => e
@@ -9,23 +10,6 @@ end
 
 require 'rake'
 require 'rdoc/task'
-
-begin
-  require 'jeweler'
-  Jeweler::Tasks.new do |gemspec|
-    gemspec.name = "mongoid_taggable"
-    gemspec.version = "0.1.7"
-    gemspec.summary = "Mongoid taggable behaviour"
-    gemspec.description = "Mongoid Taggable provides some helpers to create taggable documents."
-    gemspec.email = "wilkerlucio@gmail.com"
-    gemspec.homepage = "http://github.com/wilkerlucio/mongoid_taggable"
-    gemspec.authors = ["Wilker Lucio", "Kris Kowalik"]
-  end
-  Jeweler::GemcutterTasks.new
-rescue LoadError
-  puts "Jeweler not available. Install it with: gem install jeweler"
-end
-
 require 'rspec'
 require 'rspec/core/rake_task'
 
