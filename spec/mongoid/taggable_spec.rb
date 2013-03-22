@@ -185,15 +185,15 @@ describe Mongoid::Taggable do
     end
 
     it 'should launch the map/reduce if index activate and tag_arrays change' do
-      m = MyModel.create!(:tags => "food,ant,bee")
+      m = MyModel.create!(:tags_array => "food,ant,bee")
       m.tags = 'juice,food'
-      MyModel.should_receive(:map_reduce) {double("scope").as_null_object}
+      MyModel.should_receive(:save_tags_index!) {double("scope").as_null_object}
       m.save
     end
 
     it 'should not launch the map/reduce if index activate and tag_arrays not change' do
       m = MyModel.create!(:tags => "food,ant,bee")
-      MyModel.should_not_receive(:map_reduce)
+      MyModel.should_not_receive(:save_tags_index!)
       m.save
       m.name = 'hello'
       m.save

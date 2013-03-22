@@ -124,5 +124,9 @@ module Mongoid::Taggable
       end
       @tags_array_changed = true
     end
+
+    def save_tags_index!
+      self.class.save_tags_index!
+    end
   end
 end

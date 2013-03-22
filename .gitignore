@@ -2,3 +2,6 @@
 pkg/
 .rvmrc
 .idea/
+.rbenv-gemsets
+.rbenv-version
+Gemfile.lock
