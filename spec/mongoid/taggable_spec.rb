@@ -98,6 +98,18 @@ describe Mongoid::Taggable do
       @m.tags = "repetitive,, commas, shouldn't cause,,, empty tags"
       @m.tags_array.should == ["repetitive", "commas", "shouldn't cause", "empty tags"]
     end
+
+    it "should clear out tags when set to nil" do
+      m = MyModel.create!(tags: "hey,there")
+      m.tags = nil
+      m.tags_array.should == []
+    end
+
+    it "should clear out tags when set to empty string" do
+      m = MyModel.create!(tags: "hey,there")
+      m.tags = ""
+      m.tags_array.should == []
+    end
   end
 
   context "changing separator" do
@@ -130,11 +142,7 @@ describe Mongoid::Taggable do
     end
 
     it "should generate the index collection model based on model" do
-      MyModel.tags_index_collection.should be_a Mongoid::Collection
-    end
-
-    it "should generate the index collection model based on model with the collection name" do
-      MyModel.tags_index_collection.name.should == "my_models_tags_index"
+      MyModel.tags_index_collection.should be_a Moped::Collection
     end
 
     context "retrieving index" do
@@ -179,13 +187,13 @@ describe Mongoid::Taggable do
     it 'should launch the map/reduce if index activate and tag_arrays change' do
       m = MyModel.create!(:tags => "food,ant,bee")
       m.tags = 'juice,food'
-      MyModel.collection.master.should_receive(:map_reduce)
+      MyModel.should_receive(:map_reduce) {double("scope").as_null_object}
       m.save
     end
 
     it 'should not launch the map/reduce if index activate and tag_arrays not change' do
       m = MyModel.create!(:tags => "food,ant,bee")
-      MyModel.collection.master.should_not_receive(:map_reduce)
+      MyModel.should_not_receive(:map_reduce)
       m.save
       m.name = 'hello'
       m.save

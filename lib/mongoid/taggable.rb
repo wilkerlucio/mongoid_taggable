@@ -16,7 +16,7 @@ module Mongoid::Taggable
   def self.included(base)
     # create fields for tags and index it
     base.field :tags_array, :type => Array, :default => []
-    base.index 'tags_array' => 1 #[['tags_array', Mongo::ASCENDING]]
+    base.index tags_array: 1 #[['tags_array', Mongo::ASCENDING]]
 
     # add callback to save tags index
     base.after_save do |document|
@@ -57,7 +57,7 @@ module Mongoid::Taggable
     # retrieve the list of tags with weight (i.e. count), this is useful for
     # creating tag clouds
     def tags_with_weight
-      tags_index_collection.find.to_a.map{ |r| [r["_id"], r["value"].to_i] }
+      tags_index_collection.find.to_a.map{ |r| [r["_id"], r["value"]] }
     end
 
     def disable_tags_index!
@@ -104,7 +104,10 @@ module Mongoid::Taggable
         return count;
       }"
 
-      self.map_reduce(map, reduce).out(replace: tags_index_collection_name).time
+      # Since map_reduce is normally lazy-executed, call 'raw'
+      # Should not be influenced by scoping. Let consumers worry about
+      # removing tags they wish not to appear in index.
+      self.unscoped.map_reduce(map, reduce).out(replace: tags_index_collection_name).raw
     end
   end
 
@@ -114,7 +117,11 @@ module Mongoid::Taggable
     end
 
     def tags=(tags)
-      self.tags_array = tags.split(self.class.tags_separator).map(&:strip).reject(&:blank?)
+      if tags.present?
+        self.tags_array = tags.split(self.class.tags_separator).map(&:strip).reject(&:blank?)
+      else
+       self.tags_array = []
+      end
       @tags_array_changed = true
     end
   end
