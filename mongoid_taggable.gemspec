@@ -4,11 +4,11 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 Gem::Specification.new do |g|
   g.name        = 'mongoid_taggable'
-  g.version     = '1.0.0.pre'
+  g.version     = '1.1.0'
   g.date        = '2013-03-22'
   g.description = %q{Mongoid Taggable provides some helpers to create taggable documents.}
   g.summary     = %q{Mongoid taggable behaviour}
-  g.authors     = ['Caleb Clark', 'Adam St. John', 'Wilker Lucio', 'Kris Kowalik']
+  g.authors     = ['Wilker Lucio', 'Kris Kowalik', 'Adam St. John', 'Caleb Clark']
   g.email       = ['cclark@mobilizationlabs.com']
   g.homepage    = 'http://github.com/wilkerlucio/mongoid_taggable'
 

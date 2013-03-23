@@ -4,7 +4,7 @@ Mongoid Taggable provides some helpers to create taggable documents.
 
 h2. Installation
 
-You can simple install from rubygems:
+You can install from rubygems:
 
 bc. gem install mongoid_taggable
 
@@ -15,6 +15,10 @@ bc. gem 'mongoid_taggable'
 or as a Rails Plugin:
 
 bc. script/plugin install git://github.com/wilkerlucio/mongoid_taggable.git
+
+h2. Mongoid 2 vs Mongoid 3
+
+All gem versions less than 1.x only support Mongoid 2 while versions 1.x and greater support Mongoid 3.
 
 h2. Basic Usage
 
