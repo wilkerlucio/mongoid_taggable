@@ -53,7 +53,16 @@ module Mongoid::Taggable
     def tags_with_weight
       tags_index_collection.find.to_a.map{ |r| [r["_id"], r["value"]] }
     end
-
+    
+    # retieve the list of top n numbers of tags   
+    def tags_top (n)
+      tags_index_collection.find.sort(value:-1).limit(n).to_a.map{ |r| r["_id"] }
+    end
+    # retieve the list of top n numbers of tags with weight    
+    def tags_with_weight_top (n)
+      tags_index_collection.find.sort(value:-1).limit(n).to_a.map{ |r| [r["_id"], r["value"]] }
+    end
+    
     def disable_tags_index!
       @do_tags_index = false
     end
