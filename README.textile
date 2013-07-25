@@ -67,6 +67,7 @@ MyModel.tagged_with_all(['foo', 'bar'])
 MyModel.tagged_with_any('foo', 'bar')
 MyModel.tagged_with_any(['foo', 'bar'])
 
+
 h2. Tags Indexing
 
 This module will automatically create an index of tags and their counts for you after saving the document. This can be used for a tag cloud. See the following example to understand how to use it:
@@ -86,6 +87,10 @@ Post.tags_with_weight # will retrieve:
 #   ['strip', 1],
 #   ['zip', 1]
 # ]
+Post.tags_top(n) # will retrieve top n numbers of tags
+
+Post.tags_with_weight_top(n) # will retrieve top n numbers of tags with weight
+
 
 p. The tags index is unaffected by default_scopes. If enabled, all tags will be indexed regardless of other attribute values.
 p. If you don't want to use this feature, it is good to disable it to improve performance:
