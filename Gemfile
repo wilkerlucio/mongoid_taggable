@@ -8,3 +8,8 @@ group :test do
   gem 'rdoc'
   gem 'database_cleaner'
 end
+
+
+group :development do
+  gem 'debugger'
+end

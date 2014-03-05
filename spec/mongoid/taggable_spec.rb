@@ -199,6 +199,61 @@ describe Mongoid::Taggable do
       m.save
     end
 
+
+
+
   end
+
+  context 'finding similarities based on tags' do
+
+    before :each do
+      @john = MyModel.create!({tags: 'a, b, c, d, e'})
+      @paul = MyModel.create!({tags: 'a, b, x, y, z'})
+      @george = MyModel.create!({tags: 'v, w, x, y, z'})
+      @ringo = MyModel.create!({tags: 'm, n, o, p, q'})
+    end
+
+
+    it 'should find a similar item based on tags' do
+      related = @john.find_related
+      expect(related).to be_kind_of(Array)
+      related.should have(1).items
+      related.should include(@paul)
+    end
+
+     it 'related items should be in order of similarity' do
+      related = @paul.find_related
+      expect(related).to be_kind_of(Array)
+      related.should have(2).items
+      expect(related[0]).to eq(@george)
+      expect(related[1]).to eq(@john)
+    end
+
+  end
+
+
+  context 'similarity finding speed' do
+    before :each do
+      MyModel.disable_tags_index!
+      @number_of_items = 10000
+      letters = ('a'..'z').to_a
+      @number_of_items.times do |x|
+        tags = letters.sample(2+rand(5))
+        #puts "#{x}: tags = #{tags}"
+        MyModel.create!({tags: tags.join(','), name: x.to_s})
+      end
+      MyModel.enable_tags_index!
+    end
+
+    it 'made tagged objects' do
+      MyModel.count.should eq(@number_of_items)
+    end
+
+
+  end
+
+
+
+
 
 end

@@ -121,4 +121,28 @@ module Mongoid::Taggable
   def save_tags_index!
     self.class.save_tags_index!
   end
+
+
+  # Find by related
+  # find items related to this item by which have the most tags the same
+  # http://dev.mensfeld.pl/2014/02/mongoid-and-aggregation-framework-get-similar-elements-based-on-tags-ordered-by-total-number-of-matches-similarity-level/
+
+  def find_related(limit = 0)
+    related_pipeline = [
+      {"$match" => { tags_array: {"$in" => self.tags_array}, _id: {"$ne" => self._id}} },
+      {"$unwind" => "$tags_array"},
+      {"$match" => {tags_array: {"$in" => self.tags_array} } },
+      {"$group" => {_id: "$_id", matches: {"$sum" => 1} } },
+      {"$sort" => {matches: -1} }
+    ]
+    related_pipeline.push({"$limit" => limit}) if  limit > 0
+    related = self.collection.aggregate(*related_pipeline)
+
+    ordering = {}
+    related.each_with_index { |x, i| ordering[x["_id"]] = i }
+
+    self.class.find(related.map { |x| x["_id"] }).sort_by { |o| ordering[o.id]  }
+  end
+
+
 end
