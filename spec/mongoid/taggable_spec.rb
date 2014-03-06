@@ -185,7 +185,7 @@ describe Mongoid::Taggable do
     end
 
     it 'should launch the map/reduce if index activate and tag_arrays change' do
-      m = MyModel.create!(:tags_array => "food,ant,bee")
+      m = MyModel.create!(:tags => "food,ant,bee")
       m.tags = 'juice,food'
       MyModel.should_receive(:save_tags_index!) {double("scope").as_null_object}
       m.save
@@ -235,25 +235,81 @@ describe Mongoid::Taggable do
   context 'similarity finding speed' do
     before :each do
       MyModel.disable_tags_index!
-      @number_of_items = 10000
+      start_time = Time.now
+      @number_of_items = 1000
       letters = ('a'..'z').to_a
       @number_of_items.times do |x|
         tags = letters.sample(2+rand(5))
-        #puts "#{x}: tags = #{tags}"
         MyModel.create!({tags: tags.join(','), name: x.to_s})
       end
+      @time_to_create = Time.now-start_time
       MyModel.enable_tags_index!
     end
 
-    it 'made tagged objects' do
+    it 'should be roughly linear to create' do
+      MyModel.disable_tags_index!
+      test_start_time = Time.now
+      factor = 10
+      test_items = @number_of_items/factor
+      letters = ('a'..'z').to_a
+      test_items.times do |x|
+        tags = letters.sample(2+rand(5))
+        MyModel.create!({tags: tags.join(','), name: x.to_s})
+      end
+      test_time = Time.now-test_start_time
+      MyModel.enable_tags_index!
+      expect(test_time).to be < @time_to_create/(factor)
+    end
+
+
+    it 'made tagged objects, ordered by decreasing similarity' do
       MyModel.count.should eq(@number_of_items)
+
+      testObj = MyModel.create!({tags: "a,b,c", name: 'test'})
+      related = testObj.find_related
+      # Related should have objects tagged with at least one thing in testObj
+      expect(related).to be_kind_of(Array)
+      max_similar_tags = 3
+
+      related.each do |r|
+        expect(r.tags).to match(/(a)|(b)|(c)/)
+        similar_tags = r.tags_array.count {|x| ["a", "b", "c"].include? x }
+        expect(similar_tags).to be <= max_similar_tags
+        max_similar_tags = similar_tags
+      end
+
     end
 
 
   end
 
 
+  context 'creating large number of items' do
+    before :each do
+      MyModel.disable_tags_index!
+      start_time = Time.now
+      @number_of_items = 10000
+      letters = ('a'..'z').to_a
+      @number_of_items.times do |x|
+        tags = letters.sample(2+rand(5))
+        MyModel.create!({tags: tags.join(','), name: x.to_s})
+      end
+      @time_to_create = Time.now-start_time
+      MyModel.enable_tags_index!
+    end
+
+    it 'should take roughly the same time with indexing or not' do
+      test_start_time = Time.now
+      letters = ('a'..'z').to_a
+      @number_of_items.times do |x|
+        tags = letters.sample(2+rand(5))
+        MyModel.create!({tags: tags.join(','), name: x.to_s})
+      end
+      test_time = Time.now-test_start_time
+      expect(test_time - @time_to_create).to be < @time_to_create/10
 
 
+    end
+  end
 
 end

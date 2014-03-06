@@ -45,13 +45,15 @@ module Mongoid::Taggable
     end
 
     def tags
-      tags_index_collection.find.to_a.map{ |r| r["_id"] }
+      index_tags! if need_to_index_tags
+      tags_index_collection.find.sort(_id: 1).to_a.map{ |r| r["_id"]}
     end
 
     # retrieve the list of tags with weight (i.e. count), this is useful for
     # creating tag clouds
     def tags_with_weight
-      tags_index_collection.find.to_a.map{ |r| [r["_id"], r["value"]] }
+      index_tags! if need_to_index_tags
+      tags_index_collection.find.sort(_id: 1).to_a.map{ |r| [r["_id"], r["matches"]] }
     end
 
     def disable_tags_index!
@@ -61,6 +63,12 @@ module Mongoid::Taggable
     def enable_tags_index!
       @do_tags_index = true
     end
+
+
+    def need_to_index_tags
+      @need_to_index_tags ||= false
+    end
+
 
     def tags_separator(separator = nil)
       @tags_separator = separator if separator
@@ -78,31 +86,35 @@ module Mongoid::Taggable
     def save_tags_index!
       return unless @do_tags_index
 
-      map = "function() {
-        if (!this.tags_array) {
-          return;
-        }
+      @need_to_index_tags = true
+   end
 
-        for (index in this.tags_array) {
-          emit(this.tags_array[index], 1);
-        }
-      }"
+    private
 
-      reduce = "function(previous, current) {
-        var count = 0;
+    def index_tags!
+      return unless @do_tags_index
 
-        for (index in current) {
-          count += current[index]
-        }
+      # tag indexing was incredibly slow using map_reduce
+      # http://docs.mongodb.org/manual/core/map-reduce/ suggests using the aggregation pipeline
 
-        return count;
-      }"
+      tags_index_pipeline = [
+        {"$unwind" => "$tags_array"},
+        {"$group" => {_id: "$tags_array", matches: {"$sum" => 1} } },
+        {"$sort" => {_id: 1}}
+      ]
 
-      # Since map_reduce is normally lazy-executed, call 'raw'
-      # Should not be influenced by scoping. Let consumers worry about
-      # removing tags they wish not to appear in index.
-      self.unscoped.map_reduce(map, reduce).out(replace: tags_index_collection_name).raw
+      # It would be good to use the "$out" pipeline step, to save this aggregation
+      # to a collection (instead of array), but this is only available in unreleased Mongo 2.6
+
+      results = self.unscoped.collection.aggregate(*tags_index_pipeline)
+
+      results.each { |r| tags_index_collection.find(_id: r["_id"]).upsert(r) }
+
+      @need_to_index_tags = false
     end
+
+
+
   end
 
 
