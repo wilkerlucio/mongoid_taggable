@@ -207,10 +207,10 @@ describe Mongoid::Taggable do
   context 'finding similarities based on tags' do
 
     before :each do
-      @john = MyModel.create!({tags: 'a, b, c, d, e'})
-      @paul = MyModel.create!({tags: 'a, b, x, y, z'})
-      @george = MyModel.create!({tags: 'v, w, x, y, z'})
-      @ringo = MyModel.create!({tags: 'm, n, o, p, q'})
+      @john = MyModel.create!({tags: 'a, b, c, d, e', name:'John'})
+      @paul = MyModel.create!({tags: 'a, b, x, y, z', name: 'Paul'})
+      @george = MyModel.create!({tags: 'v, w, x, y, z', name: 'George'})
+      @ringo = MyModel.create!({tags: 'm, n, o, p, q', name: 'Ringo'})
     end
 
 
@@ -225,8 +225,8 @@ describe Mongoid::Taggable do
       related = @paul.find_related
       expect(related).to be_kind_of(Array)
       related.should have(2).items
-      expect(related[0]).to eq(@george)
-      expect(related[1]).to eq(@john)
+      related[0].should == @george
+      related[1].should == @john
     end
 
   end
@@ -237,28 +237,21 @@ describe Mongoid::Taggable do
       MyModel.disable_tags_index!
       start_time = Time.now
       @number_of_items = 1000
-      letters = ('a'..'z').to_a
-      @number_of_items.times do |x|
-        tags = letters.sample(2+rand(5))
-        MyModel.create!({tags: tags.join(','), name: x.to_s})
-      end
+      create_many_tagged_items(@number_of_items)
       @time_to_create = Time.now-start_time
       MyModel.enable_tags_index!
     end
 
-    it 'should be roughly linear to create' do
+    it 'should be roughly linear to create (within 20%)' do
       MyModel.disable_tags_index!
       test_start_time = Time.now
       factor = 10
       test_items = @number_of_items/factor
-      letters = ('a'..'z').to_a
-      test_items.times do |x|
-        tags = letters.sample(2+rand(5))
-        MyModel.create!({tags: tags.join(','), name: x.to_s})
-      end
+      create_many_tagged_items(test_items)
       test_time = Time.now-test_start_time
       MyModel.enable_tags_index!
-      expect(test_time).to be < @time_to_create/(factor)
+      allowance = 0.2
+      expect(test_time).to be < @time_to_create/(factor*(1-allowance))
     end
 
 
@@ -289,27 +282,38 @@ describe Mongoid::Taggable do
       MyModel.disable_tags_index!
       start_time = Time.now
       @number_of_items = 10000
-      letters = ('a'..'z').to_a
-      @number_of_items.times do |x|
-        tags = letters.sample(2+rand(5))
-        MyModel.create!({tags: tags.join(','), name: x.to_s})
-      end
+      create_many_tagged_items(@number_of_items)
       @time_to_create = Time.now-start_time
       MyModel.enable_tags_index!
     end
 
-    it 'should take roughly the same time with indexing or not' do
+    it 'should take roughly the same time with indexing or not (within 10%)' do
+      MyModel.disable_tags_index!
+      MyModel.tags.should be_empty
+      MyModel.enable_tags_index!
+      MyModel.should_receive(:save_tags_index!).exactly(@number_of_items).times
+      MyModel.should_receive(:index_tags_now!).and_call_original
       test_start_time = Time.now
-      letters = ('a'..'z').to_a
-      @number_of_items.times do |x|
-        tags = letters.sample(2+rand(5))
-        MyModel.create!({tags: tags.join(','), name: x.to_s})
-      end
+      create_many_tagged_items(@number_of_items)
       test_time = Time.now-test_start_time
       expect(test_time - @time_to_create).to be < @time_to_create/10
-
-
+      tags = MyModel.tags #this should cause indexing
+      tags.should_not be_empty
     end
+  end
+
+
+  LETTERS = ('a'..'z').to_a
+
+  def create_many_tagged_items(number_to_create)
+    number_to_create.times do |x|
+      create_tagged_item(x.to_s)
+    end
+  end
+
+  def create_tagged_item(name = "", tags_at_least = 2, tags_at_most = 7)
+    tags = LETTERS.sample(rand(tags_at_least..tags_at_most))
+    MyModel.create!({tags: tags.join(','), name: name})
   end
 
 end

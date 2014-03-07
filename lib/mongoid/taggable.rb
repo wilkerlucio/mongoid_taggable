@@ -45,14 +45,14 @@ module Mongoid::Taggable
     end
 
     def tags
-      index_tags! if need_to_index_tags
+      index_tags_now! if need_to_index_tags and @do_tags_index
       tags_index_collection.find.sort(_id: 1).to_a.map{ |r| r["_id"]}
     end
 
     # retrieve the list of tags with weight (i.e. count), this is useful for
     # creating tag clouds
     def tags_with_weight
-      index_tags! if need_to_index_tags
+      index_tags_now! if need_to_index_tags and @do_tags_index
       tags_index_collection.find.sort(_id: 1).to_a.map{ |r| [r["_id"], r["matches"]] }
     end
 
@@ -87,13 +87,10 @@ module Mongoid::Taggable
       return unless @do_tags_index
 
       @need_to_index_tags = true
-   end
+    end
 
-    private
 
-    def index_tags!
-      return unless @do_tags_index
-
+    def index_tags_now!
       # tag indexing was incredibly slow using map_reduce
       # http://docs.mongodb.org/manual/core/map-reduce/ suggests using the aggregation pipeline
 
