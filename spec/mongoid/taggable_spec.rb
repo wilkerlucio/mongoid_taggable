@@ -211,23 +211,46 @@ describe Mongoid::Taggable do
       @paul = MyModel.create!({tags: 'a, b, x, y, z', name: 'Paul'})
       @george = MyModel.create!({tags: 'v, w, x, y, z', name: 'George'})
       @ringo = MyModel.create!({tags: 'm, n, o, p, q', name: 'Ringo'})
+
+      @someone_else = MyModel.create!({tags: 'v, w, m, n, q', name: 'Someone'})
+      @someone_else2 = MyModel.create!({tags: 'a, w, m, n, q', name: 'Someone 2'})
     end
 
 
     it 'should find a similar item based on tags' do
       related = @john.find_related
       expect(related).to be_kind_of(Array)
-      related.should have(1).items
+      related.should have_at_least(1).items
       related.should include(@paul)
     end
 
      it 'related items should be in order of similarity' do
       related = @paul.find_related
-      expect(related).to be_kind_of(Array)
-      related.should have(2).items
+      related.should have_at_least(2).items
       related[0].should == @george
       related[1].should == @john
     end
+
+    it 'should work with multiple items as input' do
+      related = MyModel.find_related([@george, @ringo])
+      related.should have_at_least(1).items
+      related[0].should == @someone_else  #  5 matches
+      related.include?(@george).should be_false
+      related.include?(@ringo).should be_false
+    end
+
+    it 'for multiple items as input, it should order based on tag matches' do
+      related = MyModel.find_related([@john, @paul, @george, @ringo])
+      related.should have_at_least(1).items
+      related[0].should == @someone_else2  # 6 matches
+    end
+
+    it 'should allow pipeline injection' do
+      related = @john.find_related(0, {"$match" => {name: {"$ne" => "Paul"}}})
+      related.should have_at_least(1).items
+      related[0].should == @someone_else2
+    end
+
 
   end
 

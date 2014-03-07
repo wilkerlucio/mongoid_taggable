@@ -110,7 +110,30 @@ module Mongoid::Taggable
       @need_to_index_tags = false
     end
 
+    def find_related(document_array, limit = 0, pipeline_injection = [])
 
+      total_tags =  document_array.map(&:tags_array).flatten
+      total_ids =  document_array.map(&:id).flatten.uniq
+
+      related_pipeline = [
+        {"$match" => { tags_array:  {"$in" => total_tags}, _id: {"$nin" => total_ids}} },
+        {"$unwind" => "$tags_array"},
+        {"$match" => {tags_array: {"$in" => total_tags} } },
+        {"$group" => {_id: "$_id", matches: {"$sum" => 1} } },
+        {"$sort" => {matches: -1} }
+      ]
+      related_pipeline.push({"$limit" => limit}) if  limit > 0
+
+      related_pipeline = (pipeline_injection.kind_of?(Array) ?
+                related_pipeline.insert(0, *pipeline_injection)
+              : related_pipeline.insert(0, pipeline_injection) )
+
+      related = self.collection.aggregate(*related_pipeline)
+
+      ordering = {}
+      related.each_with_index { |x, i| ordering[x["_id"]] = i }
+      self.find(related.map { |x| x["_id"] }).sort_by { |o| ordering[o.id]  }
+    end
 
   end
 
@@ -136,21 +159,8 @@ module Mongoid::Taggable
   # find items related to this item by which have the most tags the same
   # http://dev.mensfeld.pl/2014/02/mongoid-and-aggregation-framework-get-similar-elements-based-on-tags-ordered-by-total-number-of-matches-similarity-level/
 
-  def find_related(limit = 0)
-    related_pipeline = [
-      {"$match" => { tags_array: {"$in" => self.tags_array}, _id: {"$ne" => self._id}} },
-      {"$unwind" => "$tags_array"},
-      {"$match" => {tags_array: {"$in" => self.tags_array} } },
-      {"$group" => {_id: "$_id", matches: {"$sum" => 1} } },
-      {"$sort" => {matches: -1} }
-    ]
-    related_pipeline.push({"$limit" => limit}) if  limit > 0
-    related = self.collection.aggregate(*related_pipeline)
-
-    ordering = {}
-    related.each_with_index { |x, i| ordering[x["_id"]] = i }
-
-    self.class.find(related.map { |x| x["_id"] }).sort_by { |o| ordering[o.id]  }
+  def find_related(limit = 0, pipeline_injection = [])
+    self.class.find_related([self], limit, pipeline_injection)
   end
 
 
