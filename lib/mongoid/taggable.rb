@@ -148,8 +148,6 @@ module Mongoid::Taggable
         {"$match" => {tags_array: {"$in" => total_tags} } }
       ]
 
-      related_pipeline.push({"$limit" => limit}) if  limit > 0
-
       related_pipeline = (pipeline_injection.kind_of?(Array) ?
                 related_pipeline.insert(0, *pipeline_injection)
               : related_pipeline.insert(0, pipeline_injection) )
@@ -178,7 +176,11 @@ module Mongoid::Taggable
         end
       end
 
-      self.find(related.map { |x| x["_id"] }).sort { |x,y| ordering[y.id] <=> ordering[x.id]  }
+      related = self.find(related.map { |x| x["_id"] }).sort { |x,y| ordering[y.id] <=> ordering[x.id] }
+      if limit > 0
+        return related.first(limit)
+      end
+      return related
     end
 
   end

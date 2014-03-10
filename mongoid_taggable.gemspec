@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 Gem::Specification.new do |g|
   g.name        = 'mongoid_taggable'
-  g.version     = '1.1.3'
+  g.version     = '1.1.4'
   g.date        = '2014-03-10'
   g.description = %q{Mongoid Taggable provides some helpers to create taggable documents.}
   g.summary     = %q{Mongoid taggable behaviour}

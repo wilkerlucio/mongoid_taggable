@@ -224,11 +224,17 @@ describe Mongoid::Taggable do
       related.should include(@paul)
     end
 
-     it 'related items should be in order of similarity' do
+    it 'related items should be in order of similarity' do
       related = @paul.find_related
       related.should have_at_least(2).items
       related[0].should == @george
       related[1].should == @john
+    end
+
+    it 'should limit the results' do
+      related = @paul.find_related(1)
+      related.should have(1).items
+      related[0].should == @george
     end
 
     it 'should work with multiple items as input' do
@@ -250,6 +256,7 @@ describe Mongoid::Taggable do
       related.should have_at_least(1).items
       related[0].should == @someone_else2
     end
+
 
   end
 
