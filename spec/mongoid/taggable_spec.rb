@@ -185,7 +185,7 @@ describe Mongoid::Taggable do
     end
 
     it 'should launch the map/reduce if index activate and tag_arrays change' do
-      m = MyModel.create!(:tags_array => "food,ant,bee")
+      m = MyModel.create!(:tags => "food,ant,bee")
       m.tags = 'juice,food'
       MyModel.should_receive(:save_tags_index!) {double("scope").as_null_object}
       m.save
@@ -199,6 +199,176 @@ describe Mongoid::Taggable do
       m.save
     end
 
+
+
+
+  end
+
+  context 'finding similarities based on tags' do
+
+    before :each do
+      @john = MyModel.create!({tags: 'a, b, c, d, e', name:'John'})
+      @paul = MyModel.create!({tags: 'a, b, x, y, z', name: 'Paul'})
+      @george = MyModel.create!({tags: 'v, w, x, y, z', name: 'George'})
+      @ringo = MyModel.create!({tags: 'm, n, o, p, q', name: 'Ringo'})
+
+      @someone_else = MyModel.create!({tags: 'v, w, m, n, q', name: 'Someone'})
+      @someone_else2 = MyModel.create!({tags: 'a, w, m, n, q', name: 'Someone 2'})
+    end
+
+
+    it 'should find a similar item based on tags' do
+      related = @john.find_related
+      expect(related).to be_kind_of(Array)
+      related.should have_at_least(1).items
+      related.should include(@paul)
+    end
+
+    it 'related items should be in order of similarity' do
+      related = @paul.find_related
+      related.should have_at_least(2).items
+      related[0].should == @george
+      related[1].should == @john
+    end
+
+    it 'should limit the results' do
+      related = @paul.find_related(1)
+      related.should have(1).items
+      related[0].should == @george
+    end
+
+    it 'should work with multiple items as input' do
+      related = MyModel.find_related([@george, @ringo])
+      related.should have_at_least(1).items
+      related[0].should == @someone_else  #  5 matches
+      related.include?(@george).should be_false
+      related.include?(@ringo).should be_false
+    end
+
+    it 'for multiple items as input, it should order based on tag matches' do
+      related = MyModel.find_related([@john, @paul, @george, @ringo])
+      related.should have_at_least(1).items
+      related[0].should == @someone_else2  # 6 matches
+    end
+
+    it 'should allow pipeline injection' do
+      related = @john.find_related(0, false, {"$match" => {name: {"$ne" => "Paul"}}})
+      related.should have_at_least(1).items
+      related[0].should == @someone_else2
+    end
+
+
+  end
+
+  context 'tag uniqueness' do
+    before :each do
+      @alice = MyModel.create!({tags: "a,b,c,d,e", name: "Alice"})
+      @bob = MyModel.create!({tags: "a,b,c", name: "Bob"})
+      @cathy = MyModel.create!({tags: "b,c", name: "Cathy"})
+      @darrel = MyModel.create!({tags: "d,e", name: "Darrel"})
+      @esther = MyModel.create!({tags: "a,b", name: "Esther"})
+      @frank = MyModel.create!({tags: "a,c", name: "Frank"})
+    end
+
+    it 'should find similar items via tag uniquness' do
+      related = @alice.find_related
+      related.first.should eq(@bob)
+
+      #if we care about uniqueness, darrel is more related
+      # "d, e" are unique tags and don't appear very often
+      related = @alice.find_related(0,true)
+      related.first.should eq(@darrel)
+    end
+
+    it 'should allow finding related from a set of documents' do
+      related = MyModel.find_related([@alice, @bob, @cathy, @esther], 0, true)
+      related.first.should eq(@frank)
+    end
+
+  end
+
+  context 'similarity finding speed' do
+    before :each do
+      MyModel.disable_tags_index!
+      start_time = Time.now
+      @number_of_items = 1000
+      create_many_tagged_items(@number_of_items)
+      @time_to_create = Time.now-start_time
+      MyModel.enable_tags_index!
+    end
+
+    it 'should be roughly linear to create (within 20%)' do
+      MyModel.disable_tags_index!
+      test_start_time = Time.now
+      factor = 10
+      test_items = @number_of_items/factor
+      create_many_tagged_items(test_items)
+      test_time = Time.now-test_start_time
+      MyModel.enable_tags_index!
+      allowance = 0.2
+      expect(test_time).to be < @time_to_create/(factor*(1-allowance))
+    end
+
+
+    it 'made tagged objects, ordered by decreasing similarity' do
+      MyModel.count.should eq(@number_of_items)
+
+      testObj = MyModel.create!({tags: "a,b,c", name: 'test'})
+      related = testObj.find_related
+      # Related should have objects tagged with at least one thing in testObj
+      expect(related).to be_kind_of(Array)
+      max_similar_tags = 3
+
+      related.each do |r|
+        expect(r.tags).to match(/(a)|(b)|(c)/)
+        similar_tags = r.tags_array.count {|x| ["a", "b", "c"].include? x }
+        expect(similar_tags).to be <= max_similar_tags
+        max_similar_tags = similar_tags
+      end
+
+    end
+
+
+  end
+
+
+  context 'creating large number of items' do
+    before :each do
+      MyModel.disable_tags_index!
+      start_time = Time.now
+      @number_of_items = 10000
+      create_many_tagged_items(@number_of_items)
+      @time_to_create = Time.now-start_time
+      MyModel.enable_tags_index!
+    end
+
+    it 'should take roughly the same time with indexing or not (within 10%)' do
+      MyModel.disable_tags_index!
+      MyModel.tags.should be_empty
+      MyModel.enable_tags_index!
+      MyModel.should_receive(:save_tags_index!).exactly(@number_of_items).times
+      MyModel.should_receive(:index_tags_now!).and_call_original
+      test_start_time = Time.now
+      create_many_tagged_items(@number_of_items)
+      test_time = Time.now-test_start_time
+      expect(test_time - @time_to_create).to be < @time_to_create/10
+      tags = MyModel.tags #this should cause indexing
+      tags.should_not be_empty
+    end
+  end
+
+
+  LETTERS = ('a'..'z').to_a
+
+  def create_many_tagged_items(number_to_create)
+    number_to_create.times do |x|
+      create_tagged_item(x.to_s)
+    end
+  end
+
+  def create_tagged_item(name = "", tags_at_least = 2, tags_at_most = 7)
+    tags = LETTERS.sample(rand(tags_at_least..tags_at_most))
+    MyModel.create!({tags: tags.join(','), name: name})
   end
 
 end
