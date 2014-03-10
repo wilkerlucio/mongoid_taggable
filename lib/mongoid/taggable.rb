@@ -56,6 +56,21 @@ module Mongoid::Taggable
       tags_index_collection.find.sort(_id: 1).to_a.map{ |r| [r["_id"], r["matches"]] }
     end
 
+    # retrieve the list of tags with uniqueness
+    # i.e. a measure [0-1] of the probability a document doesn't have this tag
+    # This is useful for seeing how unique a tag is
+    def tags_with_uniqueness
+      index_tags_now! if need_to_index_tags and @do_tags_index
+      tags_index_collection.find.sort(_id: 1).to_a.map{ |r| [r["_id"], r["uniqueness"]] }
+    end
+
+
+    def tags_hash
+      index_tags_now! if need_to_index_tags and @do_tags_index
+      Hash[tags_index_collection.find.to_a.map { |tag| [tag["_id"], tag] } ]
+    end
+
+
     def disable_tags_index!
       @do_tags_index = false
     end
@@ -93,10 +108,14 @@ module Mongoid::Taggable
     def index_tags_now!
       # tag indexing was incredibly slow using map_reduce
       # http://docs.mongodb.org/manual/core/map-reduce/ suggests using the aggregation pipeline
+      total_docs = self.count.to_f
 
       tags_index_pipeline = [
         {"$unwind" => "$tags_array"},
         {"$group" => {_id: "$tags_array", matches: {"$sum" => 1} } },
+        {"$project" => {
+           matches: 1,
+           uniqueness: {"$subtract" => [1, {"$divide" => ["$matches", total_docs]} ] } } },
         {"$sort" => {_id: 1}}
       ]
 
@@ -105,23 +124,30 @@ module Mongoid::Taggable
 
       results = self.unscoped.collection.aggregate(*tags_index_pipeline)
 
-      results.each { |r| tags_index_collection.find(_id: r["_id"]).upsert(r) }
+
+      results.each do |r|
+        tags_index_collection.find(_id: r["_id"]).upsert(r)
+      end
 
       @need_to_index_tags = false
     end
 
-    def find_related(document_array, limit = 0, pipeline_injection = [])
+
+    # Find similar documents based on tags
+    # find items related to this item by which have the most tags the same
+    # http://dev.mensfeld.pl/2014/02/mongoid-and-aggregation-framework-get-similar-elements-based-on-tags-ordered-by-total-number-of-matches-similarity-level/
+    def find_related(document_array, limit = 0, uniqueness_match=false, pipeline_injection = [])
 
       total_tags =  document_array.map(&:tags_array).flatten
       total_ids =  document_array.map(&:id).flatten.uniq
 
       related_pipeline = [
-        {"$match" => { tags_array:  {"$in" => total_tags}, _id: {"$nin" => total_ids}} },
+        {"$match" => {  _id: {"$nin" => total_ids} }  },
+        {"$match" => { tags_array:  {"$in" => total_tags} } },
         {"$unwind" => "$tags_array"},
-        {"$match" => {tags_array: {"$in" => total_tags} } },
-        {"$group" => {_id: "$_id", matches: {"$sum" => 1} } },
-        {"$sort" => {matches: -1} }
+        {"$match" => {tags_array: {"$in" => total_tags} } }
       ]
+
       related_pipeline.push({"$limit" => limit}) if  limit > 0
 
       related_pipeline = (pipeline_injection.kind_of?(Array) ?
@@ -130,9 +156,29 @@ module Mongoid::Taggable
 
       related = self.collection.aggregate(*related_pipeline)
 
-      ordering = {}
-      related.each_with_index { |x, i| ordering[x["_id"]] = i }
-      self.find(related.map { |x| x["_id"] }).sort_by { |o| ordering[o.id]  }
+      ordering = Hash.new(0)
+
+      tag_occurences_in_input  = Hash.new(0)
+      total_tags.each {|t| tag_occurences_in_input[t] += 1}
+
+      # if we don't care about uniquness, just sort based on how many tags were
+      # found that matched the input - if a tag appears n times in the input,
+      # it is matched n times
+      if(!uniqueness_match)
+        related.each do |r|
+          ordering[r["_id"]] += tag_occurences_in_input[r["tags_array"]]
+        end
+      else
+        # we care that some tags are more special than others, and should promote those
+        # results higher
+        tag_values = tags_hash
+        related.each do |r|
+          tag = r["tags_array"]
+          ordering[r["_id"]] += tag_values[tag]["uniqueness"]*tag_occurences_in_input[tag]
+        end
+      end
+
+      self.find(related.map { |x| x["_id"] }).sort { |x,y| ordering[y.id] <=> ordering[x.id]  }
     end
 
   end
@@ -155,12 +201,8 @@ module Mongoid::Taggable
   end
 
 
-  # Find by related
-  # find items related to this item by which have the most tags the same
-  # http://dev.mensfeld.pl/2014/02/mongoid-and-aggregation-framework-get-similar-elements-based-on-tags-ordered-by-total-number-of-matches-similarity-level/
-
-  def find_related(limit = 0, pipeline_injection = [])
-    self.class.find_related([self], limit, pipeline_injection)
+ def find_related(limit = 0, uniqueness_match = false, pipeline_injection = [])
+    self.class.find_related([self], limit, uniqueness_match, pipeline_injection)
   end
 
 

@@ -246,14 +246,39 @@ describe Mongoid::Taggable do
     end
 
     it 'should allow pipeline injection' do
-      related = @john.find_related(0, {"$match" => {name: {"$ne" => "Paul"}}})
+      related = @john.find_related(0, false, {"$match" => {name: {"$ne" => "Paul"}}})
       related.should have_at_least(1).items
       related[0].should == @someone_else2
     end
 
-
   end
 
+  context 'tag uniqueness' do
+    before :each do
+      @alice = MyModel.create!({tags: "a,b,c,d,e", name: "Alice"})
+      @bob = MyModel.create!({tags: "a,b,c", name: "Bob"})
+      @cathy = MyModel.create!({tags: "b,c", name: "Cathy"})
+      @darrel = MyModel.create!({tags: "d,e", name: "Darrel"})
+      @esther = MyModel.create!({tags: "a,b", name: "Esther"})
+      @frank = MyModel.create!({tags: "a,c", name: "Frank"})
+    end
+
+    it 'should find similar items via tag uniquness' do
+      related = @alice.find_related
+      related.first.should eq(@bob)
+
+      #if we care about uniqueness, darrel is more related
+      # "d, e" are unique tags and don't appear very often
+      related = @alice.find_related(0,true)
+      related.first.should eq(@darrel)
+    end
+
+    it 'should allow finding related from a set of documents' do
+      related = MyModel.find_related([@alice, @bob, @cathy, @esther], 0, true)
+      related.first.should eq(@frank)
+    end
+
+  end
 
   context 'similarity finding speed' do
     before :each do
