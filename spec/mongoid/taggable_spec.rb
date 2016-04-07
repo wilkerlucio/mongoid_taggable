@@ -33,43 +33,43 @@ describe Mongoid::Taggable do
     context "by tagged_with" do
       let(:models){MyModel.tagged_with('interesting')}
       it "locates tagged objects" do
-        models.include?(model).should be_true
+        models.include?(model).should be true
       end
     end
     context "by tagged_with_all using an array" do
       let(:models){MyModel.tagged_with_all(['interesting', 'good'])}
       it "locates tagged objects" do
-        models.include?(model).should be_true
+        models.include?(model).should be true
       end
     end
     context "by tagged_with_all using strings" do
       let(:models){MyModel.tagged_with_all('interesting', 'good')}
       it "locates tagged objects" do
-        models.include?(model).should be_true
+        models.include?(model).should be true
       end
     end
     context "by tagged_with_all when tag not included" do
       let(:models){MyModel.tagged_with_all('interesting', 'good', 'mcdonalds')}
       it "locates tagged objects" do
-        models.include?(model).should be_false
+        models.include?(model).should be false
       end
     end
     context "by tagged_with_any using an array" do
       let(:models){MyModel.tagged_with_any(['interesting', 'mcdonalds'])}
       it "locates tagged objects" do
-        models.include?(model).should be_true
+        models.include?(model).should be true
       end
     end
     context "by tagged_with_any using strings" do
       let(:models){MyModel.tagged_with_any('interesting', 'mcdonalds')}
       it "locates tagged objects" do
-        models.include?(model).should be_true
+        models.include?(model).should be true
       end
     end
     context "by tagged_with_any when tag not included" do
       let(:models){MyModel.tagged_with_any('hardees', 'wendys', 'mcdonalds')}
       it "locates tagged objects" do
-        models.include?(model).should be_false
+        models.include?(model).should be false
       end
     end
   end
