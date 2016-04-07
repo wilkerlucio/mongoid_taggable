@@ -15,5 +15,9 @@ end
 require 'mongoid'
 require 'mongoid_taggable'
 
-Mongoid.load!("spec/mongoid.yml", :test)
+if Mongoid::Taggable.mongoid3? || Mongoid::Taggable.mongoid4?
+  Mongoid.load!("spec/mongoid3+4.yml", :test)
+else
+  Mongoid.load!("spec/mongoid5.yml", :test)
+end
 
