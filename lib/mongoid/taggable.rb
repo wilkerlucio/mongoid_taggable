@@ -13,6 +13,14 @@
 # limitations under the License.
 
 module Mongoid::Taggable
+  def self.mongoid3?
+    Mongoid::VERSION =~ /^3\./
+  end
+
+  def self.mongoid4?
+    Mongoid::VERSION =~ /^4\./
+  end
+
   extend ActiveSupport::Concern
 
   included do
@@ -72,7 +80,8 @@ module Mongoid::Taggable
     end
 
     def tags_index_collection
-      @tags_index_collection ||= Moped::Collection.new(self.collection.database, tags_index_collection_name)
+      klass = Mongoid::Taggable.mongoid3? || Mongoid::Taggable.mongoid4? ? Moped::Collection : Mongo::Collection
+      @tags_index_collection ||= klass.new(self.collection.database, tags_index_collection_name)
     end
 
     def save_tags_index!

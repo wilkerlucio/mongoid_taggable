@@ -141,8 +141,9 @@ describe Mongoid::Taggable do
       MyModel.tags_index_collection_name.should == "my_models_tags_index"
     end
 
-    it "should generate the index collection model based on model" do
-      MyModel.tags_index_collection.should be_a Moped::Collection
+    it "should generate the index collection model based on model" do      
+      klass = Mongoid::Taggable.mongoid3? || Mongoid::Taggable.mongoid4? ? Moped::Collection : Mongo::Collection
+      MyModel.tags_index_collection.should be_a klass
     end
 
     context "retrieving index" do
@@ -185,7 +186,7 @@ describe Mongoid::Taggable do
     end
 
     it 'should launch the map/reduce if index activate and tag_arrays change' do
-      m = MyModel.create!(:tags_array => "food,ant,bee")
+      m = MyModel.create!(:tags_array => %w{food ant bee})
       m.tags = 'juice,food'
       MyModel.should_receive(:save_tags_index!) {double("scope").as_null_object}
       m.save
